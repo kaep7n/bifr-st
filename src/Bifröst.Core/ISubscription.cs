@@ -8,7 +8,6 @@ namespace Bifröst.Core
 
         bool Matches(Topic topic);
 
-
         void Receive(IEvent evt);
     }
 }
