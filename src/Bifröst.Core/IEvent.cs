@@ -7,6 +7,6 @@ namespace Bifröst.Core
     {
         Guid Id { get; }
 
-        string Topic { get; }
+        Topic Topic { get; }
     }
 }

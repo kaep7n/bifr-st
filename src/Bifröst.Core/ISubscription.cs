@@ -6,7 +6,7 @@ namespace Bifröst.Core
     {
         Guid Id { get; }
 
-        string Topic { get; }
+        bool Matches(Topic topic);
 
         void Receive(IEvent evt);
     }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Bifröst.Core
 {
-    class Subscriber
+    public class Topic
     {
     }
 }

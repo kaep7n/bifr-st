@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Bifröst.Core
 {
-    public class Router
+    public class Bifröst
     {
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
@@ -14,7 +14,7 @@ namespace Bifröst.Core
 
         public void Enqueue(IEvent evt)
         {
-            var receivers = this.subscriptions.Where(s => s.Topic == evt.Topic);
+            var receivers = this.subscriptions.Where(s => s.Matches(evt.Topic));
 
             foreach (var receiver in receivers)
             {
