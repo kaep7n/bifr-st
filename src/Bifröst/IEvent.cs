@@ -1,7 +1,6 @@
-﻿
-using System;
+﻿using System;
 
-namespace Bifröst.Core
+namespace Bifröst
 {
     public interface IEvent
     {

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bifröst.Core\Bifröst.Core.csproj" />
+    <ProjectReference Include="..\Bifröst\Bifröst.csproj" />
   </ItemGroup>
 
 </Project>
