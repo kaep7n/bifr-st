@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Bifröst.Tests
@@ -12,25 +14,47 @@ namespace Bifröst.Tests
         }
 
         [Fact]
-        public void Subscribe_should_start_bus_when_than_one_subscription_added()
+        public void Start_then_Stop_should_set_IsRunning_accordingly()
         {
-            var subscription = new ActionSubscription(evt => { });
-            
             var bus = new Bus();
-            bus.Subscribe(subscription);
-            Assert.True(bus.IsStarted);
+            bus.Start();
+            Assert.True(bus.IsRunning);
+            bus.Stop();
+            Assert.False(bus.IsRunning);
         }
 
         [Fact]
-        public void Unsubscribe_should_stop_bus_when_no_subscribers_left()
+        public async Task Enqueue_should_take_event_withou_subscription()
         {
-            var subscription = new ActionSubscription(evt => { });
+            var topic = new TopicBuilder("test").Build();
+
+            var expectedEvent = new FakeEvent(topic, "Test");
+
+            var bus = new Bus();
+            await bus.EnqueueAsync(expectedEvent);
+        }
+
+        [Fact]
+        public async Task Enqueue_should_forward_event_to_registered_subscriber()
+        {
+            using var resetEvent = new ManualResetEvent(false);
             
+            var topic = new TopicBuilder("test").Build();
+            var expectedEvent = new FakeEvent(topic, "Test");
+
+            var subscription = new ActionSubscription(evt =>
+            {
+                Assert.Equal(expectedEvent, evt);
+                resetEvent.Set();
+            });
+
             var bus = new Bus();
             bus.Subscribe(subscription);
-            Assert.True(bus.IsStarted);
-            bus.Unsubscribe(subscription);
-            Assert.False(bus.IsStarted);
+            await bus.EnqueueAsync(expectedEvent);
+            bus.Start();
+
+            var wasReset = resetEvent.WaitOne(50);
+            Assert.True(wasReset);
         }
     }
 }

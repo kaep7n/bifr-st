@@ -1,4 +1,5 @@
 ﻿using Bifröst.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,64 +7,69 @@ using System.Threading.Tasks;
 
 namespace Bifröst
 {
-    public sealed class Bus
+    public sealed class Bus : IDisposable
     {
-        private readonly Queue<IEvent> eventsQueue = new Queue<IEvent>();
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly AsyncQueue<IEvent> eventsQueue = new AsyncQueue<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
-        public bool IsStarted { get; private set; } = false;
+        private bool isDisposing = false;
+
+        public bool IsRunning { get; private set; }
 
         public void Subscribe(ISubscription subscription)
         {
             this.subscriptions.Add(subscription);
-
-            if (this.subscriptions.Any())
-            {
-                this.Start();
-            }
         }
 
         public void Unsubscribe(ISubscription subscription)
         {
             this.subscriptions.Remove(subscription);
+        }
 
-            if (!this.subscriptions.Any())
+        public async Task EnqueueAsync(IEvent evt)
+        {
+            await this.eventsQueue.EnqueueAsync(evt)
+                .ConfigureAwait(false);
+        }
+
+        public void Start()
+        {
+            Task.Run(() => this.ProcessAsync());
+        }
+
+        public void Stop()
+        {
+            this.tokenSource.Cancel();
+        }
+
+        private async Task ProcessAsync()
+        {
+            await foreach (var evt in this.eventsQueue
+                .WithCancellation(this.tokenSource.Token))
             {
-                this.Stop();
+                this.subscriptions
+                .Where(s => s.Matches(evt.Topic))
+                .ForEach(s => s.Receive(evt));
             }
         }
 
-        public void Enqueue(IEvent evt)
+        private void Dispose(bool disposing)
         {
-            this.eventsQueue.Enqueue(evt);
-        }
-
-        private void Start()
-        {
-            this.IsStarted = true;
-            Task.Run(() => this.Process());
-        }
-
-        private void Stop()
-        {
-            this.IsStarted = false;
-        }
-
-        private void Process()
-        {
-            while (this.IsStarted)
+            if (!this.isDisposing)
             {
-                var evt = this.eventsQueue.Peek();
-
-                if(evt == null)
+                if (disposing)
                 {
-                    Thread.Sleep(1);
+                    this.eventsQueue.Dispose();
                 }
 
-                this.subscriptions
-                    .Where(s => s.Matches(evt.Topic))
-                    .ForEach(s => s.Receive(evt));
+                this.isDisposing = true;
             }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
         }
     }
 }
