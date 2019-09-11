@@ -36,11 +36,13 @@ namespace Bifröst
         public void Start()
         {
             Task.Run(() => this.ProcessAsync());
+            this.IsRunning = true;
         }
 
         public void Stop()
         {
             this.tokenSource.Cancel();
+            this.IsRunning = false;
         }
 
         private async Task ProcessAsync()
@@ -61,6 +63,7 @@ namespace Bifröst
                 if (disposing)
                 {
                     this.eventsQueue.Dispose();
+                    this.tokenSource.Dispose();
                 }
 
                 this.isDisposing = true;
