@@ -17,19 +17,15 @@ namespace Bifröst
 
         public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = default)
         {
-            // We lock this so we only ever enumerate once at a time.
-            // That way we ensure all items are returned in a continuous
-            // fashion with no 'holes' in the data when two foreach compete.
             await this.enumerationSemaphore.WaitAsync()
                 .ConfigureAwait(false);
 
             try
             {
-                // Return new elements until cancellationToken is triggered.
                 while (true)
                 {
-                    // Make sure to throw on cancellation so the Task will transfer into a canceled state
                     token.ThrowIfCancellationRequested();
+                 
                     yield return await this.bufferBlock.ReceiveAsync(token)
                         .ConfigureAwait(false);
                 }

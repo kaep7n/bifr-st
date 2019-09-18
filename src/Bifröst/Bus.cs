@@ -9,10 +9,10 @@ namespace Bifröst
 {
     public sealed class Bus : IDisposable
     {
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly AsyncQueue<IEvent> eventsQueue = new AsyncQueue<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
+        private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private bool isDisposing = false;
 
         public bool IsRunning { get; private set; }
@@ -35,24 +35,33 @@ namespace Bifröst
 
         public void Start()
         {
+            this.tokenSource = new CancellationTokenSource();
+
             Task.Run(() => this.ProcessAsync());
-            this.IsRunning = true;
         }
 
         public void Stop()
         {
             this.tokenSource.Cancel();
-            this.IsRunning = false;
         }
 
         private async Task ProcessAsync()
         {
-            await foreach (var evt in this.eventsQueue
-                .WithCancellation(this.tokenSource.Token))
+            try
             {
-                this.subscriptions
-                .Where(s => s.Matches(evt.Topic))
-                .ForEach(s => s.Receive(evt));
+                this.IsRunning = true;
+
+                await foreach (var evt in this.eventsQueue
+                                            .WithCancellation(this.tokenSource.Token))
+                {
+                    this.subscriptions
+                        .Where(s => s.Matches(evt.Topic))
+                        .ForEach(s => s.EnqueueAsync(evt));
+                }
+            }
+            finally
+            {
+                this.IsRunning = false;
             }
         }
 

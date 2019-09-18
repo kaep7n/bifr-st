@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Bifröst
 {
@@ -8,6 +9,6 @@ namespace Bifröst
 
         bool Matches(Topic topic);
 
-        void Receive(IEvent evt);
+        Task EnqueueAsync(IEvent evt);
     }
 }
