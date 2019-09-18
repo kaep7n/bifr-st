@@ -1,7 +1,6 @@
-﻿
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Bifröst.Core
+namespace Bifröst
 {
     public interface IPublisher
     {

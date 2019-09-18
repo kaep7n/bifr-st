@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bifröst.Core\Bifröst.Core.csproj" />
+    <ProjectReference Include="..\Bifröst\Bifröst.csproj" />
   </ItemGroup>
 
 </Project>
