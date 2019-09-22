@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Bifröst
 {
-    public sealed class Bus : IDisposable
+    public sealed class Bus : IBus, IDisposable
     {
         private readonly AsyncQueue<IEvent> eventsQueue = new AsyncQueue<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
