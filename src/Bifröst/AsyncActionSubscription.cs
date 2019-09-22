@@ -3,32 +3,29 @@ using System.Threading.Tasks;
 
 namespace Bifröst
 {
-    public class AsyncActionSubscription : ISubscription
+    public class AsyncActionSubscription : Subscription
     {
         private readonly Func<IEvent, Task> asyncAction;
 
-        public AsyncActionSubscription(Func<IEvent, Task> asyncAction)
+        public AsyncActionSubscription(Func<IEvent, Task> asyncAction, params Topic[] topics)
+            : base(topics)
         {
             if (asyncAction is null)
             {
                 throw new ArgumentNullException(nameof(asyncAction));
             }
 
-            this.Id = Guid.NewGuid();
             this.asyncAction = asyncAction;
         }
 
-        public Guid Id { get; }
-
-        public bool Matches(Topic topic)
+        protected override async Task ProcessEventAsync(IEvent evt)
         {
-            return true;
-        }
+            if (evt is null)
+            {
+                throw new ArgumentNullException(nameof(evt));
+            }
 
-        public async Task EnqueueAsync(IEvent evt)
-        {
-            await this.asyncAction(evt)
-                .ConfigureAwait(false);
+            await this.asyncAction(evt).ConfigureAwait(false);
         }
     }
 }
