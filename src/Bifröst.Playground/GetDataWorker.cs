@@ -45,7 +45,7 @@ namespace Bifröst.Playground
 
             for (var i = 0; i < 10; i++)
             {
-                yield return new Data("rng", rng.Next(0, 255));
+                yield return new Data("rng", rng.Next(65, 122));
             }
         }
     }

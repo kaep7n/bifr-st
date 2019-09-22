@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Bifröst.Playground
@@ -6,7 +7,7 @@ namespace Bifröst.Playground
     public class TransformDataWorker
     {
         private readonly IBus bus;
-        private AsyncActionSubscription subscription;
+        private readonly AsyncActionSubscription subscription;
 
         public TransformDataWorker(IBus bus)
         {
@@ -16,7 +17,7 @@ namespace Bifröst.Playground
             }
 
             this.bus = bus;
-            
+
             var topic = new TopicBuilder("playground")
                .With("data")
                .With("rng")
@@ -27,10 +28,23 @@ namespace Bifröst.Playground
             this.subscription.Enable();
         }
 
-        private Task TransformAsync(IEvent evt)
+        private async Task TransformAsync(IEvent evt)
         {
+            var topic = new TopicBuilder("playground")
+                         .With("data")
+                         .With("ascii")
+                         .Build();
+
+            var dataEvent = evt as DataEvent;
+
             Console.WriteLine($"received event {evt.Topic.Path} ({evt.Id})");
-            return Task.CompletedTask;
+
+            var data = dataEvent.Data;
+            var ascii = Convert.ToChar(data.Value);
+
+            var asciiEvent = new AsciiEvent(topic, data.Key, ascii);
+
+            await this.bus.EnqueueAsync(asciiEvent);
         }
     }
 }

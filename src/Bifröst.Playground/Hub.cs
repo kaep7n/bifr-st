@@ -9,9 +9,9 @@ namespace Bifröst.Playground
         private readonly IBus bus;
         private readonly GetDataWorker getData;
         private readonly TransformDataWorker transformDataWorker;
-        private readonly SaveDataWorker saveDataWorker;
+        private readonly WriteToConsoleWorker saveDataWorker;
 
-        public Hub(IBus bus, GetDataWorker getData, TransformDataWorker transformDataWorker, SaveDataWorker saveDataWorker)
+        public Hub(IBus bus, GetDataWorker getData, TransformDataWorker transformDataWorker, WriteToConsoleWorker saveDataWorker)
         {
             if (bus is null)
             {
