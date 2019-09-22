@@ -71,6 +71,7 @@ namespace Bifröst.Tests
 
             await bus.EnqueueAsync(evt);
 
+            Thread.Sleep(50);
             Assert.Collection(subscription.ReceivedEvents, e => Assert.Equal(evt, e));
         }
 
@@ -89,6 +90,7 @@ namespace Bifröst.Tests
                 await bus.EnqueueAsync(evt);
             }
 
+            Thread.Sleep(50);
             Assert.All(events, e => Assert.Contains(subscription.ReceivedEvents, r => r.Id == e.Id));
         }
     }
