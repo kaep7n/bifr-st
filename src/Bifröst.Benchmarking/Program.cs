@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
 using System;
+using System.Threading;
 
 namespace Bifröst.Benchmarking
 {
@@ -7,7 +8,7 @@ namespace Bifröst.Benchmarking
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<RouterBenchmark>();
+            //BenchmarkRunner.Run<RouterBenchmark>();
         }
     }
 }
