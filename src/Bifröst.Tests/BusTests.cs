@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -29,26 +31,27 @@ namespace Bifröst.Tests
         }
 
         [Theory]
-        [InlineData(5)]
+        [InlineData(3)]
         public void Start_then_Stop_multiple_times_should_set_IsRunning_accordingly(int times)
         {
             var bus = new Bus();
-            
+
             for (var i = 0; i < times; i++)
             {
                 bus.Start();
-                Thread.Sleep(100);
+                Thread.Sleep(5);
                 Assert.True(bus.IsRunning);
+
                 bus.Stop();
-                Thread.Sleep(100);
+                Thread.Sleep(5);
                 Assert.False(bus.IsRunning);
             }
         }
 
         [Fact]
-        public async Task Enqueue_should_take_event_withou_subscription()
+        public async Task EnqueueAsync_should_take_event_without_subscription()
         {
-            var topic = new TopicBuilder("test").Build();
+            var topic = new TopicBuilder("root").Build();
 
             var expectedEvent = new FakeEvent(topic, "Test");
 
@@ -56,28 +59,37 @@ namespace Bifröst.Tests
             await bus.EnqueueAsync(expectedEvent);
         }
 
-        [Fact]
-        public async Task Enqueue_should_forward_event_to_registered_subscriber()
+        [Theory]
+        [ClassData(typeof(SingleEventData))]
+        public async Task EnqueueAsync_should_forward_event_to_registered_subscriber(IEvent evt)
         {
-            using var resetEvent = new ManualResetEvent(false);
-
-            var topic = new TopicBuilder("test").Build();
-            var expectedEvent = new FakeEvent(topic, "Test");
-
-            var subscription = new AsyncActionSubscription(evt =>
-            {
-                Assert.Equal(expectedEvent, evt);
-                resetEvent.Set();
-                return Task.CompletedTask;
-            });
+            var subscription = new FakeSubscription((Topic)evt.Topic.Clone());
 
             var bus = new Bus();
-            bus.Subscribe(subscription);
-            await bus.EnqueueAsync(expectedEvent);
             bus.Start();
+            bus.Subscribe(subscription);
 
-            var wasReset = resetEvent.WaitOne(50);
-            Assert.True(wasReset);
+            await bus.EnqueueAsync(evt);
+
+            Assert.Collection(subscription.ReceivedEvents, e => Assert.Equal(evt, e));
+        }
+
+        [Theory]
+        [ClassData(typeof(MultipleEventsData))]
+        public async Task EnqueueAsync_should_forward_multiple_events_to_registered_subscriber(Topic topic, IEnumerable<IEvent> events)
+        {
+            var subscription = new FakeSubscription(topic);
+
+            var bus = new Bus();
+            bus.Start();
+            bus.Subscribe(subscription);
+
+            foreach (var evt in events)
+            {
+                await bus.EnqueueAsync(evt);
+            }
+
+            Assert.All(events, e => Assert.Contains(subscription.ReceivedEvents, r => r.Id == e.Id));
         }
     }
 }

@@ -19,11 +19,21 @@ namespace Bifröst
 
         public void Subscribe(ISubscription subscription)
         {
+            if (subscription is null)
+            {
+                throw new ArgumentNullException(nameof(subscription));
+            }
+
             this.subscriptions.Add(subscription);
         }
 
         public void Unsubscribe(ISubscription subscription)
         {
+            if (subscription is null)
+            {
+                throw new ArgumentNullException(nameof(subscription));
+            }
+
             this.subscriptions.Remove(subscription);
         }
 
@@ -51,12 +61,11 @@ namespace Bifröst
             {
                 this.IsRunning = true;
 
-                await foreach (var evt in this.eventsQueue
-                                            .WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.eventsQueue.WithCancellation(this.tokenSource.Token))
                 {
                     this.subscriptions
                         .Where(s => s.Matches(evt.Topic))
-                        .ForEach(s => s.EnqueueAsync(evt));
+                        .ForEach(async s => await s.EnqueueAsync(evt).ConfigureAwait(false));
                 }
             }
             finally
