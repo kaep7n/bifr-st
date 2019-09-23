@@ -18,7 +18,6 @@ namespace Bifröst.Playground
             services.AddSingleton<TransformDataWorker>();
             services.AddSingleton<WriteToConsoleWorker>();
 
-
             Console.WriteLine("building service provider");
             var provider = services.BuildServiceProvider();
 

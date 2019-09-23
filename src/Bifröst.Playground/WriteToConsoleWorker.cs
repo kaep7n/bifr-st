@@ -29,7 +29,7 @@ namespace Bifröst.Playground
 
         private Task WriteToConsoleAsync(IEvent evt)
         {
-            Console.WriteLine((evt as AsciiEvent).Ascii);
+            Console.Write((evt as AsciiEvent).Ascii);
 
             return Task.CompletedTask;
         }

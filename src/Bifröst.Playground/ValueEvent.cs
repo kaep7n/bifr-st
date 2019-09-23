@@ -2,29 +2,24 @@
 
 namespace Bifröst.Playground
 {
-    public class DataEvent : IEvent
+    public class ValueEvent : IEvent
     {
-        public DataEvent(Topic topic, Data data)
+        public ValueEvent(Topic topic, int value)
         {
             if (topic is null)
             {
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            if (data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
             this.Id = Guid.NewGuid();
             this.Topic = topic;
-            this.Data = data;
+            this.Value = value;
         }
 
         public Guid Id { get; }
 
         public Topic Topic { get; }
 
-        public Data Data { get; }
+        public int Value { get; }
     }
 }

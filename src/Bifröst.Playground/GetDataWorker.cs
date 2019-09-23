@@ -28,24 +28,22 @@ namespace Bifröst.Playground
                 .With("rng")
                 .Build();
 
-            Console.WriteLine("getting data...");
-
             foreach (var data in this.GetData())
             {
-                var evt = new DataEvent(topic, data);
+                var evt = new ValueEvent(topic, data);
                 await this.bus.EnqueueAsync(evt);
             }
 
             Console.WriteLine("sent data to bus");
         }
 
-        private IEnumerable<Data> GetData()
+        private IEnumerable<int> GetData()
         {
             var rng = new Random();
 
             for (var i = 0; i < 10; i++)
             {
-                yield return new Data("rng", rng.Next(65, 122));
+                yield return rng.Next(65, 122);
             }
         }
     }

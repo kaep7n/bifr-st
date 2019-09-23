@@ -35,14 +35,12 @@ namespace Bifröst.Playground
                          .With("ascii")
                          .Build();
 
-            var dataEvent = evt as DataEvent;
+            var valueEvent = evt as ValueEvent;
 
-            Console.WriteLine($"received event {evt.Topic.Path} ({evt.Id})");
+            var ascii = Convert.ToChar(valueEvent.Value);
+            var asciiEvent = new AsciiEvent(topic, ascii);
 
-            var data = dataEvent.Data;
-            var ascii = Convert.ToChar(data.Value);
-
-            var asciiEvent = new AsciiEvent(topic, data.Key, ascii);
+            Console.WriteLine($"transformed {valueEvent.Value} to {asciiEvent.Ascii}");
 
             await this.bus.EnqueueAsync(asciiEvent);
         }
