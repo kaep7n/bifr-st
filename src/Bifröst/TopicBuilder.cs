@@ -14,6 +14,7 @@ namespace Bifröst
         public TopicBuilder With(string path)
         {
             this.path.Add(path);
+
             return this;
         }
 
