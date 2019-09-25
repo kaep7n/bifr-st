@@ -1,35 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Bifröst
 {
     public class PatternBuilder
     {
-        private readonly List<string> path = new List<string>();
+        private readonly List<string> fragments = new List<string>();
 
         public PatternBuilder(string root)
         {
-            this.path.Add(root);
+            PathValidator.ValidateAndThrow(root);
+
+            this.fragments.Add(root);
         }
 
-        public PatternBuilder With(string path)
+        public PatternBuilder With(string fragment)
         {
-            this.path.Add(path);
+            PathValidator.ValidateAndThrow(fragment);
+
+            this.fragments.Add(fragment);
 
             return this;
         }
 
         public PatternBuilder WithWildcard()
         {
-            this.path.Add("*");
+            this.fragments.Add("*");
 
             return this;
         }
 
         public Pattern Build()
         {
-            var path = string.Join("/", this.path)
+            var path = string.Join("/", this.fragments)
                 .Insert(0, "/");
 
             return new Pattern(path);
