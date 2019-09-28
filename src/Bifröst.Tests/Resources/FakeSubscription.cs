@@ -9,22 +9,22 @@ namespace Bifröst.Tests
     {
         private readonly List<IEvent> receivedEvents = new List<IEvent>();
 
-        public FakeSubscription(params Topic[] topics)
+        public FakeSubscription(Pattern pattern)
         {
-            if (topics is null)
+            if (pattern is null)
             {
-                throw new ArgumentNullException(nameof(topics));
+                throw new ArgumentNullException(nameof(pattern));
             }
 
             this.Id = Guid.NewGuid();
-            this.Topics = topics;
+            this.Pattern = pattern;
         }
 
         public Guid Id { get; }
 
         public bool IsEnabled { get; private set; }
 
-        public IEnumerable<Topic> Topics { get; }
+        public Pattern Pattern { get; }
 
         public IEnumerable<IEvent> ReceivedEvents => this.receivedEvents;
 
