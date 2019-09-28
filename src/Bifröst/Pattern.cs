@@ -25,7 +25,26 @@ namespace Bifröst
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            return topic.Path.Equals(this.Value, StringComparison.OrdinalIgnoreCase);
+            var topicFragments = topic.Path.Split('/');
+            var patternFragments = this.Value.Split('/');
+
+            for (var i = 0; i < topicFragments.Length; i++)
+            {
+                var topicFragment = topicFragments[i];
+                var patternFragment = patternFragments[i];
+
+                if (patternFragment == "*")
+                {
+                    continue;
+                }
+
+                if (patternFragment != topicFragment)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

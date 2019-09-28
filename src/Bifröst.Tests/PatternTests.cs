@@ -93,5 +93,22 @@ namespace Bifröst.Tests
             var matches = pattern.Matches(topic);
             Assert.True(matches);
         }
+
+        [Fact]
+        public void Matches_should_return_true_for_match_with_wildcard()
+        {
+            var pattern = new PatternBuilder("root")
+                .WithWildcard()
+                .With("config")
+                .Build();
+
+            var topic = new TopicBuilder("root")
+                .With("worker")
+                .With("config")
+                .Build();
+
+            var matches = pattern.Matches(topic);
+            Assert.True(matches);
+        }
     }
 }
