@@ -7,8 +7,8 @@ namespace Bifröst
     {
         private readonly Func<IEvent, Task> asyncAction;
 
-        public AsyncActionSubscription(Func<IEvent, Task> asyncAction, params Topic[] topics)
-            : base(topics)
+        public AsyncActionSubscription(Func<IEvent, Task> asyncAction, Pattern pattern)
+            : base(pattern)
         {
             if (asyncAction is null)
             {

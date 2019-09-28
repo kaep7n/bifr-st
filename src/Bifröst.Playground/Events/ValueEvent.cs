@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace Bifröst.Playground
+namespace Bifröst.Playground.Events
 {
-    public class AsciiEvent : IEvent
+    public class ValueEvent : IEvent
     {
-        public AsciiEvent(Topic topic, char ascii)
+        public ValueEvent(Topic topic, int value)
         {
             if (topic is null)
             {
@@ -13,13 +13,13 @@ namespace Bifröst.Playground
 
             this.Id = Guid.NewGuid();
             this.Topic = topic;
-            this.Ascii = ascii;
+            this.Value = value;
         }
 
         public Guid Id { get; }
 
         public Topic Topic { get; }
-        
-        public char Ascii { get; }
+
+        public int Value { get; }
     }
 }

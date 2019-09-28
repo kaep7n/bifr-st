@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,26 +12,26 @@ namespace Bifröst
         private CancellationTokenSource tokenSource;
         private bool isDisposing = false;
 
-        public Subscription(params Topic[] topics)
+        public Subscription(Pattern pattern)
         {
-            if (topics is null)
+            if (pattern is null)
             {
-                throw new ArgumentNullException(nameof(topics));
+                throw new ArgumentNullException(nameof(pattern));
             }
 
             this.Id = Guid.NewGuid();
-            this.Topics = topics;
+            this.Pattern = pattern;
         }
 
         public Guid Id { get; }
 
-        public IEnumerable<Topic> Topics { get; }
+        public Pattern Pattern { get; }
 
         public bool IsEnabled { get; private set; }
 
         public bool Matches(Topic topic)
         {
-            return this.Topics.Any(t => t.Equals(topic));
+            return this.Pattern.Matches(topic);
         }
 
         public async Task EnqueueAsync(IEvent evt)
