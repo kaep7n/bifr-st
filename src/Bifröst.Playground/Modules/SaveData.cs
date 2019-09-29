@@ -24,7 +24,7 @@ namespace Bifröst.Playground
             this.logger.LogDebug($"save: received evt with topic {evt.Topic}");
 
             this.logger.LogDebug("save: delaying for 300 ms");
-            await Task.Delay(300);
+            await Task.Delay(50);
 
             this.logger.LogDebug("save: simulated save operation finished");
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Bifröst
 {
@@ -6,11 +7,29 @@ namespace Bifröst
     {
         private readonly List<string> fragments = new List<string>();
 
+        public PatternBuilder()
+        {
+        }
+
         public PatternBuilder(string root)
         {
             PathValidator.ValidateAndThrow(root);
 
             this.fragments.Add(root);
+        }
+
+        public PatternBuilder FromTopic(Topic topic)
+        {
+            if (topic is null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
+
+            var fragments = topic.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
+
+            this.fragments.AddRange(fragments);
+
+            return this;
         }
 
         public PatternBuilder With(string fragment)

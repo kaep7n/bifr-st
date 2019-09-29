@@ -11,7 +11,7 @@ namespace Bifröst.Tests
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
         {
-            var bus = new Bus();
+            using var bus = new Bus();
             Assert.NotNull(bus);
             Assert.False(bus.IsRunning);
         }
@@ -19,7 +19,7 @@ namespace Bifröst.Tests
         [Fact]
         public void Start_then_Stop_should_set_IsRunning_accordingly()
         {
-            var bus = new Bus();
+            using var bus = new Bus();
             bus.Start();
 
             Thread.Sleep(10);
@@ -34,7 +34,7 @@ namespace Bifröst.Tests
         [InlineData(3)]
         public void Start_then_Stop_multiple_times_should_set_IsRunning_accordingly(int times)
         {
-            var bus = new Bus();
+            using var bus = new Bus();
 
             for (var i = 0; i < times; i++)
             {
@@ -55,7 +55,8 @@ namespace Bifröst.Tests
 
             var expectedEvent = new FakeEvent(topic, "Test");
 
-            var bus = new Bus();
+            using var bus = new Bus();
+            
             await bus.EnqueueAsync(expectedEvent);
         }
 
@@ -63,9 +64,12 @@ namespace Bifröst.Tests
         [ClassData(typeof(SingleEventData))]
         public async Task EnqueueAsync_should_forward_event_to_registered_subscriber(IEvent evt)
         {
-            var subscription = new FakeSubscription((Topic)evt.Topic.Clone());
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
+            var subscription = new FakeSubscription(pattern);
+            subscription.Enable();
 
-            var bus = new Bus();
+            using var bus = new Bus();
+
             bus.Start();
             bus.Subscribe(subscription);
 
@@ -79,9 +83,11 @@ namespace Bifröst.Tests
         [ClassData(typeof(MultipleEventsData))]
         public async Task EnqueueAsync_should_forward_multiple_events_to_registered_subscriber(Topic topic, IEnumerable<IEvent> events)
         {
-            var subscription = new FakeSubscription(topic);
+            var pattern = new PatternBuilder().FromTopic(topic).Build();
+            var subscription = new FakeSubscription(pattern);
 
-            var bus = new Bus();
+            using var bus = new Bus();
+           
             bus.Start();
             bus.Subscribe(subscription);
 

@@ -45,6 +45,23 @@ namespace Bifröst.Tests
             Assert.Equal(expectedPath, pattern.Value);
         }
 
+        [Fact]
+        public void Builder_from_topic_should_copy_topic_path()
+        {
+            const string expectedPath = "/root/worker/config";
+
+            var topic = new TopicBuilder("root")
+                .With("worker")
+                .With("config")
+                .Build();
+
+            var pattern = new PatternBuilder()
+                .FromTopic(topic)
+                .Build();
+
+            Assert.Equal(expectedPath, pattern.Value);
+        }
+
         [Theory]
         [InlineData("root/worker")] // slash
         [InlineData("root  ")] // whitespace

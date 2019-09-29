@@ -8,6 +8,8 @@ namespace Bifröst.Playground
 {
     public class TransformData : Module
     {
+        static int callCount = 0;
+
         public TransformData(ILogger<TransformData> logger, IBus bus)
             : base(logger, bus)
         {
@@ -42,6 +44,9 @@ namespace Bifröst.Playground
             
             this.logger.LogDebug("transform: enqueuing event");
             await this.bus.EnqueueAsync(asciiEvent);
+
+            callCount++;
+            this.logger.LogInformation($"transform: called {callCount} times");
         }
     }
 }

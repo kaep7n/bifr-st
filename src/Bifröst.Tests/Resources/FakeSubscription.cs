@@ -40,7 +40,7 @@ namespace Bifröst.Tests
         
         public bool Matches(Topic topic)
         {
-            return this.Topics.Any(t => t.Equals(topic));
+            return this.Pattern.Matches(topic);
         }
 
         public Task EnqueueAsync(IEvent evt)

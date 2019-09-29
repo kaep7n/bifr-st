@@ -11,7 +11,7 @@ namespace Bifröst.Playground
 {
     public class GetData : Module
     {
-        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
 
         public GetData(ILogger<GetData> logger, IBus bus)
             : base(logger, bus)
@@ -27,7 +27,7 @@ namespace Bifröst.Playground
         public override void Start()
         {
             base.Start();
-            this.timer.Start();
+            this.Timer_Elapsed(null, null);
         }
 
         public override void Stop()
@@ -68,7 +68,7 @@ namespace Bifröst.Playground
         {
             var rng = new Random();
 
-            for (var i = 0; i < 100000; i++)
+            for (var i = 0; i < 100; i++)
             {
                 yield return rng.Next(65, 122);
             }
