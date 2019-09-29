@@ -31,5 +31,10 @@ namespace Bifröst
         {
             return HashCode.Combine(this.Path);
         }
+
+        public override string ToString()
+        {
+            return this.Path;
+        }
     }
 }
