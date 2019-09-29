@@ -3,14 +3,14 @@ using System;
 
 namespace Bifröst.Playground.Modules
 {
-    public class Module
+    public class Worker
     {
         protected readonly ILogger logger;
         protected readonly IBus bus;
 
         protected AsyncActionSubscription subscription;
 
-        public Module(ILogger logger, IBus bus)
+        public Worker(ILogger logger, IBus bus)
         {
             if (logger is null)
             {

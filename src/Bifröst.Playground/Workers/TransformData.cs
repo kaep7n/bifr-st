@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace Bifröst.Playground
 {
-    public class TransformData : Module
+    public class TransformData : Worker
     {
-        static int callCount = 0;
-
         public TransformData(ILogger<TransformData> logger, IBus bus)
             : base(logger, bus)
         {
@@ -43,10 +41,8 @@ namespace Bifröst.Playground
             var asciiEvent = new AsciiEvent(topic, ascii);
             
             this.logger.LogDebug("transform: enqueuing event");
-            await this.bus.EnqueueAsync(asciiEvent);
-
-            callCount++;
-            this.logger.LogInformation($"transform: called {callCount} times");
+            await this.bus.EnqueueAsync(asciiEvent)
+                .ConfigureAwait(false);
         }
     }
 }

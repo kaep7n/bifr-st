@@ -9,9 +9,10 @@ using System.Timers;
 
 namespace Bifröst.Playground
 {
-    public class GetData : Module
+    public class GetData : Worker, IDisposable
     {
-        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(60).TotalMilliseconds);
+        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+        private bool isDisposed = false;
 
         public GetData(ILogger<GetData> logger, IBus bus)
             : base(logger, bus)
@@ -27,7 +28,7 @@ namespace Bifröst.Playground
         public override void Start()
         {
             base.Start();
-            this.Timer_Elapsed(null, null);
+            this.timer.Start();
         }
 
         public override void Stop()
@@ -58,7 +59,8 @@ namespace Bifröst.Playground
                 var evt = new ValueEvent(topic, data);
 
                 this.logger.LogDebug("get: enququing event");
-                await this.bus.EnqueueAsync(evt);
+                await this.bus.EnqueueAsync(evt)
+                    .ConfigureAwait(false);
             }
 
             this.logger.LogInformation($"get: enqueing {generatedData.Count} events completed in {watch.ElapsedMilliseconds} ms");
@@ -72,6 +74,25 @@ namespace Bifröst.Playground
             {
                 yield return rng.Next(65, 122);
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.isDisposed)
+            {
+                if (disposing)
+                {
+                    this.timer.Dispose();
+                }
+
+                this.isDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

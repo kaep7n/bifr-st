@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Bifröst.Playground
 {
-    public class SaveData : Module
+    public class SaveData : Worker
     {
         public SaveData(ILogger<SaveData> logger, IBus bus)
             : base(logger, bus)
@@ -23,8 +23,9 @@ namespace Bifröst.Playground
         {
             this.logger.LogDebug($"save: received evt with topic {evt.Topic}");
 
-            this.logger.LogDebug("save: delaying for 300 ms");
-            await Task.Delay(50);
+            this.logger.LogDebug("save: delaying for 20 ms");
+            await Task.Delay(0)
+                .ConfigureAwait(false);
 
             this.logger.LogDebug("save: simulated save operation finished");
         }
