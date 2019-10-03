@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Bifröst
@@ -10,7 +9,7 @@ namespace Bifröst
 
         bool IsEnabled { get; }
         
-        IEnumerable<Topic> Topics { get; }
+        Pattern Pattern { get; }
 
         void Disable();
         

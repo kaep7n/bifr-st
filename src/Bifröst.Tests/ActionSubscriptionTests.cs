@@ -11,20 +11,20 @@ namespace Bifröst.Tests
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
         {
-            var topic = new TopicBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, topic);
+            var pattern = new PatternBuilder("root").Build();
+            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
 
             Assert.NotNull(subscription);
             Assert.NotEqual(Guid.Empty, subscription.Id);
             Assert.False(subscription.IsEnabled);
-            Assert.Collection(subscription.Topics, t => t.Equals(topic));
+            Assert.Equal(pattern, subscription.Pattern);
         }
 
         [Fact]
         public void Enable_then_Disable_should_set_isEnabled_accordingly()
         {
-            var topic = new TopicBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, topic);
+            var pattern = new PatternBuilder("root").Build();
+            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
 
             subscription.Enable();
             Thread.Sleep(10);
@@ -39,8 +39,8 @@ namespace Bifröst.Tests
         [InlineData(3)]
         public void Enable_then_Disable_multiple_times_should_set_isEnabled_accordingly(int times)
         {
-            var topic = new TopicBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, topic);
+            var pattern = new PatternBuilder("root").Build();
+            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
 
             for (int i = 0; i < times; i++)
             {
@@ -59,7 +59,9 @@ namespace Bifröst.Tests
         {
             using var resetEvent = new ManualResetEvent(false);
 
-            var topic = new TopicBuilder("test").Build();
+            var topic = new TopicBuilder("root").Build();
+            var pattern = new PatternBuilder("root").Build();
+
             var expectedEvent = new FakeEvent(topic, "Test");
 
             var subscription = new AsyncActionSubscription(evt =>
@@ -67,7 +69,7 @@ namespace Bifröst.Tests
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, (Topic)topic.Clone());
+            }, pattern);
 
             await subscription.EnqueueAsync(expectedEvent);
 
@@ -81,11 +83,12 @@ namespace Bifröst.Tests
         {
             using var resetEvent = new ManualResetEvent(false);
 
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new AsyncActionSubscription(e =>
             {
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, (Topic)evt.Topic.Clone());
+            }, pattern);
             
             subscription.Enable();
 
@@ -100,7 +103,8 @@ namespace Bifröst.Tests
         {
             using var resetEvent = new ManualResetEvent(false);
 
-            var topic = new TopicBuilder("test").Build();
+            var topic = new TopicBuilder("root").Build();
+            var pattern = new PatternBuilder("root").Build();
             var expectedEvent = new FakeEvent(topic, "Test");
 
             var subscription = new AsyncActionSubscription(evt =>
@@ -108,7 +112,7 @@ namespace Bifröst.Tests
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, (Topic)topic.Clone());
+            }, pattern);
             
             await subscription.EnqueueAsync(expectedEvent);
 
