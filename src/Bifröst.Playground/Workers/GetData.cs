@@ -11,7 +11,7 @@ namespace Bifröst.Playground
 {
     public class GetData : Worker, IDisposable
     {
-        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(30).TotalMilliseconds);
         private bool isDisposed = false;
 
         public GetData(ILogger<GetData> logger, IBus bus)
@@ -39,38 +39,37 @@ namespace Bifröst.Playground
 
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            this.logger.LogDebug("get: data generation event elapsed");
+            this.Logger.LogDebug("get: data generation event elapsed");
             
             var topic = new TopicBuilder("playground")
                 .With("data")
                 .With("rng")
                 .Build();
 
-
-            this.logger.LogDebug("get: generating data");
+            this.Logger.LogDebug("get: generating data");
             var generatedData = this.GenerateRandomData().ToList();
-            this.logger.LogDebug("get: generating data completed");
+            this.Logger.LogDebug("get: generating data completed");
 
             var watch = Stopwatch.StartNew();
-            this.logger.LogInformation($"get: enqueing {generatedData.Count} events");
+            this.Logger.LogInformation($"get: enqueing {generatedData.Count} events");
             foreach (var data in generatedData)
             {
-                this.logger.LogDebug($"get: creating event for topic {topic} and data {data}");
+                this.Logger.LogDebug($"get: creating event for topic {topic} and data {data}");
                 var evt = new ValueEvent(topic, data);
 
-                this.logger.LogDebug("get: enququing event");
-                await this.bus.EnqueueAsync(evt)
+                this.Logger.LogDebug("get: enququing event");
+                await this.Bus.EnqueueAsync(evt)
                     .ConfigureAwait(false);
             }
 
-            this.logger.LogInformation($"get: enqueing {generatedData.Count} events completed in {watch.ElapsedMilliseconds} ms");
+            this.Logger.LogInformation($"get: enqueing {generatedData.Count} events completed in {watch.ElapsedMilliseconds} ms");
         }
 
         private IEnumerable<int> GenerateRandomData()
         {
             var rng = new Random();
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 100_000; i++)
             {
                 yield return rng.Next(65, 122);
             }

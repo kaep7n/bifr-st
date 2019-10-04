@@ -1,13 +1,16 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using System;
 
 namespace Bifröst.Playground
 {
     class Program
     {
-        private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(b =>
+        {
+            b.SetMinimumLevel(LogLevel.Trace);
+            b.AddConsole();
+        });
 
         static void Main(string[] args)
         {
@@ -16,7 +19,11 @@ namespace Bifröst.Playground
             logger.LogInformation("creating service collection");
             var services = new ServiceCollection();
 
-            services.AddLogging(c => c.AddConsole());
+            services.AddLogging(b =>
+            {
+                b.SetMinimumLevel(LogLevel.Information);
+                b.AddConsole();
+            });
             services.AddSingleton<IBus, Bus>();
 
             services.AddSingleton<GetData>();
@@ -46,7 +53,7 @@ namespace Bifröst.Playground
             logger.LogInformation("starting save data module");
             provider.GetService<SaveData>()
                 .Stop();
-            
+
             logger.LogInformation("stopping bus");
             provider.GetService<IBus>()
                 .Stop();
@@ -54,6 +61,10 @@ namespace Bifröst.Playground
 
         private static void StartModules(ILogger<Program> logger, ServiceProvider provider)
         {
+            logger.LogInformation("starting bus");
+            provider.GetService<IBus>()
+                .Start();
+
             logger.LogInformation("starting get data module");
             provider.GetService<GetData>()
                 .Start();
@@ -64,10 +75,6 @@ namespace Bifröst.Playground
 
             logger.LogInformation("starting save data module");
             provider.GetService<SaveData>()
-                .Start();
-
-            logger.LogInformation("starting bus");
-            provider.GetService<IBus>()
                 .Start();
         }
     }

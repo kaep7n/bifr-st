@@ -16,18 +16,18 @@ namespace Bifröst.Playground
                .With("ascii")
                .Build();
 
-            this.subscription = new AsyncActionSubscription(this.SimulateSaveData, pattern);
+            this.Subscription = new AsyncActionSubscription(this.SimulateSaveData, pattern);
         }
 
         private async Task SimulateSaveData(IEvent evt)
         {
-            this.logger.LogDebug($"save: received evt with topic {evt.Topic}");
+            this.Logger.LogDebug($"save: received evt with topic {evt.Topic}");
 
-            this.logger.LogDebug("save: delaying for 20 ms");
+            this.Logger.LogDebug("save: delaying for 0 ms");
             await Task.Delay(0)
                 .ConfigureAwait(false);
 
-            this.logger.LogDebug("save: simulated save operation finished");
+            this.Logger.LogDebug("save: simulated save operation finished");
         }
     }
 }

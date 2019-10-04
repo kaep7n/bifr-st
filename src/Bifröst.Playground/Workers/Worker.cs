@@ -5,10 +5,11 @@ namespace Bifröst.Playground.Modules
 {
     public class Worker
     {
-        protected readonly ILogger logger;
-        protected readonly IBus bus;
+        protected ILogger Logger { get; }
 
-        protected AsyncActionSubscription subscription;
+        protected IBus Bus { get; }
+
+        protected AsyncActionSubscription Subscription { get; set; }
 
         public Worker(ILogger logger, IBus bus)
         {
@@ -22,35 +23,40 @@ namespace Bifröst.Playground.Modules
                 throw new ArgumentNullException(nameof(bus));
             }
 
-            this.logger = logger;
-            this.bus = bus;
+            this.Logger = logger;
+            this.Bus = bus;
         }
 
         public virtual void Start()
         {
-            this.logger.LogInformation("starting module");
+            this.Logger.LogInformation("starting module");
 
-            if (this.subscription == null)
+            if (this.Subscription == null)
             {
                 return;
             }
 
-            this.logger.LogInformation("enabling subscription");
-            this.subscription.Enable();
+            this.Logger.LogInformation("enabling subscription");
+            this.Subscription.Enable();
 
-            this.logger.LogInformation("subscribing to bus");
-            this.bus.Subscribe(this.subscription);
+            this.Logger.LogInformation("subscribing to bus");
+            this.Bus.Subscribe(this.Subscription);
         }
 
         public virtual void Stop()
         {
-            this.logger.LogInformation("stopping module");
+            this.Logger.LogInformation("stopping module");
 
-            this.logger.LogInformation("enabling subscription");
-            this.subscription.Disable();
+            if(this.Subscription == null)
+            {
+                return;
+            }
 
-            this.logger.LogInformation("unsubscribing from bus");
-            this.bus.Unsubscribe(this.subscription);
+            this.Logger.LogInformation("enabling subscription");
+            this.Subscription.Disable();
+
+            this.Logger.LogInformation("unsubscribing from bus");
+            this.Bus.Unsubscribe(this.Subscription);
         }
     }
 }
