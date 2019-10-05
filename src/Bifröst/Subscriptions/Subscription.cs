@@ -3,23 +3,29 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Bifröst
+namespace Bifröst.Subscriptions
 {
     public abstract class Subscription : IDisposable, ISubscription
     {
         private readonly AsyncQueue<IEvent> incomingQueue = new AsyncQueue<IEvent>();
-
+        private readonly IBus bus;
         private CancellationTokenSource tokenSource;
         private bool isDisposing = false;
 
-        public Subscription(Pattern pattern)
+        public Subscription(IBus bus, Pattern pattern)
         {
+            if (bus is null)
+            {
+                throw new ArgumentNullException(nameof(bus));
+            }
+
             if (pattern is null)
             {
                 throw new ArgumentNullException(nameof(pattern));
             }
 
             this.Id = Guid.NewGuid();
+            this.bus = bus;
             this.Pattern = pattern;
         }
 
@@ -49,6 +55,8 @@ namespace Bifröst
         {
             this.tokenSource = new CancellationTokenSource();
 
+            this.bus.Subscribe(this);
+
             Task.Run(() => this.ProcessIncomingQueueAsync());
         }
 
@@ -60,7 +68,8 @@ namespace Bifröst
             {
                 this.IsEnabled = true;
 
-                await foreach (var evt in this.incomingQueue.WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingQueue
+                                            .WithCancellation(this.tokenSource.Token))
                 {
                     await this.ProcessEventAsync(evt)
                         .ConfigureAwait(false);
@@ -74,6 +83,7 @@ namespace Bifröst
 
         public void Disable()
         {
+            this.bus.Unsubscribe(this);
             this.tokenSource.Cancel();
         }
 

@@ -17,32 +17,32 @@ namespace Bifröst.Tests
         }
 
         [Fact]
-        public void Start_then_Stop_should_set_IsRunning_accordingly()
+        public void Run_then_Idle_should_set_IsRunning_accordingly()
         {
             using var bus = new Bus();
-            bus.Start();
+            bus.Run();
 
             Thread.Sleep(10);
             Assert.True(bus.IsRunning);
 
-            bus.Stop();
+            bus.Idle();
             Thread.Sleep(10);
             Assert.False(bus.IsRunning);
         }
 
         [Theory]
         [InlineData(3)]
-        public void Start_then_Stop_multiple_times_should_set_IsRunning_accordingly(int times)
+        public void Run_then_Idle_multiple_times_should_set_IsRunning_accordingly(int times)
         {
             using var bus = new Bus();
 
             for (var i = 0; i < times; i++)
             {
-                bus.Start();
+                bus.Run();
                 Thread.Sleep(10);
                 Assert.True(bus.IsRunning);
 
-                bus.Stop();
+                bus.Idle();
                 Thread.Sleep(10);
                 Assert.False(bus.IsRunning);
             }
@@ -70,7 +70,7 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
 
-            bus.Start();
+            bus.Run();
             bus.Subscribe(subscription);
 
             await bus.EnqueueAsync(evt);
@@ -88,7 +88,7 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
            
-            bus.Start();
+            bus.Run();
             bus.Subscribe(subscription);
 
             foreach (var evt in events)

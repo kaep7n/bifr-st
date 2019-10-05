@@ -1,5 +1,5 @@
 ﻿using Bifröst.Playground.Events;
-using Bifröst.Playground.Modules;
+using Bifröst.Publishers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,33 +9,33 @@ using System.Timers;
 
 namespace Bifröst.Playground
 {
-    public class GetData : Worker, IDisposable
+    public class GenerateData : IDisposable
     {
         private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+        private readonly ILogger<GenerateData> logger;
+        private readonly IPublisher publisher;
         private bool isDisposed = false;
 
-        public GetData(ILogger<GetData> logger, IBus bus)
-            : base(logger, bus)
+        public GenerateData(ILogger<GenerateData> logger, PublisherFactory publisherFactory)
         {
-            if (bus is null)
+            if (logger is null)
             {
-                throw new ArgumentNullException(nameof(bus));
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (publisherFactory is null)
+            {
+                throw new ArgumentNullException(nameof(publisherFactory));
             }
 
             this.timer.Elapsed += this.Timer_Elapsed;
+            this.logger = logger;
+            this.publisher = publisherFactory.Create();
         }
 
-        public override void Start()
-        {
-            base.Start();
-            this.timer.Start();
-        }
+        public void Enable() => this.timer.Start();
 
-        public override void Stop()
-        {
-            this.timer.Stop();
-            base.Stop();
-        }
+        public void Disable() => this.timer.Stop();
 
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -45,7 +45,6 @@ namespace Bifröst.Playground
                 .With("data")
                 .With("rng")
                 .Build();
-
 
             this.logger.LogDebug("get: generating data");
             var generatedData = this.GenerateRandomData().ToList();
@@ -59,7 +58,7 @@ namespace Bifröst.Playground
                 var evt = new ValueEvent(topic, data);
 
                 this.logger.LogDebug("get: enququing event");
-                await this.bus.EnqueueAsync(evt)
+                await this.publisher.PublishAsync(evt)
                     .ConfigureAwait(false);
             }
 
@@ -70,7 +69,7 @@ namespace Bifröst.Playground
         {
             var rng = new Random();
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 50; i++)
             {
                 yield return rng.Next(65, 122);
             }
