@@ -9,14 +9,14 @@ using System.Timers;
 
 namespace Bifröst.Playground
 {
-    public class GetData : IDisposable
+    public class GenerateData : IDisposable
     {
         private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
-        private readonly ILogger<GetData> logger;
+        private readonly ILogger<GenerateData> logger;
         private readonly IPublisher publisher;
         private bool isDisposed = false;
 
-        public GetData(ILogger<GetData> logger, PublisherFactory publisherFactory)
+        public GenerateData(ILogger<GenerateData> logger, PublisherFactory publisherFactory)
         {
             if (logger is null)
             {
@@ -33,15 +33,9 @@ namespace Bifröst.Playground
             this.publisher = publisherFactory.Create();
         }
 
-        public void Enable()
-        {
-            this.timer.Start();
-        }
+        public void Enable() => this.timer.Start();
 
-        public void Disable()
-        {
-            this.timer.Stop();
-        }
+        public void Disable() => this.timer.Stop();
 
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -75,7 +69,7 @@ namespace Bifröst.Playground
         {
             var rng = new Random();
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 50; i++)
             {
                 yield return rng.Next(65, 122);
             }

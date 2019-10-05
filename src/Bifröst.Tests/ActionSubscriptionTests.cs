@@ -1,5 +1,6 @@
+using Bifröst.Subscriptions;
+using Bifröst.Tests.Resources;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -8,11 +9,13 @@ namespace Bifröst.Tests
 {
     public partial class ActionSubscriptionTests
     {
+
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
         {
+            var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
+            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
             Assert.NotNull(subscription);
             Assert.NotEqual(Guid.Empty, subscription.Id);
@@ -23,8 +26,9 @@ namespace Bifröst.Tests
         [Fact]
         public void Enable_then_Disable_should_set_isEnabled_accordingly()
         {
+            var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
+            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
             subscription.Enable();
             Thread.Sleep(10);
@@ -39,8 +43,9 @@ namespace Bifröst.Tests
         [InlineData(3)]
         public void Enable_then_Disable_multiple_times_should_set_isEnabled_accordingly(int times)
         {
+            var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(e => Task.CompletedTask, pattern);
+            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
             for (int i = 0; i < times; i++)
             {
@@ -55,21 +60,38 @@ namespace Bifröst.Tests
         }
 
         [Fact]
+        public void Enable_then_Disable_should_subscribe_and_unsubscribe()
+        {
+            var bus = new FakeBus();
+            var pattern = new PatternBuilder("root").Build();
+            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+
+            subscription.Enable();
+
+            Assert.True(bus.IsSubscribed(subscription));
+
+            subscription.Disable();
+
+            Assert.False(bus.IsSubscribed(subscription));
+        }
+
+        [Fact]
         public async Task EnqueueAsync_when_not_enabled_should_not_call_registered_action()
         {
             using var resetEvent = new ManualResetEvent(false);
 
+            var bus = new FakeBus();
             var topic = new TopicBuilder("root").Build();
             var pattern = new PatternBuilder("root").Build();
 
             var expectedEvent = new FakeEvent(topic, "Test");
 
-            var subscription = new AsyncActionSubscription(evt =>
+            var subscription = new AsyncActionSubscription(bus, pattern, evt =>
             {
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, pattern);
+            });
 
             await subscription.EnqueueAsync(expectedEvent);
 
@@ -83,12 +105,13 @@ namespace Bifröst.Tests
         {
             using var resetEvent = new ManualResetEvent(false);
 
+            var bus = new FakeBus();
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new AsyncActionSubscription(e =>
+            var subscription = new AsyncActionSubscription(bus, pattern, e =>
             {
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, pattern);
+            });
             
             subscription.Enable();
 
@@ -103,16 +126,17 @@ namespace Bifröst.Tests
         {
             using var resetEvent = new ManualResetEvent(false);
 
+            var bus = new FakeBus();
             var topic = new TopicBuilder("root").Build();
             var pattern = new PatternBuilder("root").Build();
             var expectedEvent = new FakeEvent(topic, "Test");
 
-            var subscription = new AsyncActionSubscription(evt =>
+            var subscription = new AsyncActionSubscription(bus, pattern, evt =>
             {
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
-            }, pattern);
+            });
             
             await subscription.EnqueueAsync(expectedEvent);
 

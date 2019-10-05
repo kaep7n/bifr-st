@@ -1,5 +1,4 @@
-﻿using Bifröst.Publishers;
-using Bifröst.Subscriptions;
+﻿using Bifröst.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,22 +17,10 @@ namespace Bifröst.Playground
         {
             var logger = loggerFactory.CreateLogger<Program>();
 
-            logger.LogInformation("creating service collection");
+            logger.LogInformation("adding services");
             var services = new ServiceCollection();
 
-            services.AddLogging(b =>
-            {
-                b.SetMinimumLevel(LogLevel.Trace);
-                b.AddConsole();
-            });
-
-            services.AddTransient<AsyncActionSubscriptionFactory>();
-            services.AddTransient<PublisherFactory>();
-            services.AddSingleton<IBus, Bus>();
-
-            services.AddSingleton<GetData>();
-            services.AddSingleton<TransformData>();
-            services.AddSingleton<SaveData>();
+            ConfigureServices(services);
 
             logger.LogInformation("building service provider");
             var provider = services.BuildServiceProvider();
@@ -45,10 +32,26 @@ namespace Bifröst.Playground
             DisableWorkers(logger, provider);
         }
 
+        private static void ConfigureServices(ServiceCollection services)
+        {
+            services.AddLogging(b =>
+            {
+                b.SetMinimumLevel(LogLevel.Trace);
+                //b.AddDebug();
+                b.AddConsole();
+            });
+
+            services.AddBifröst();
+
+            services.AddSingleton<GenerateData>();
+            services.AddSingleton<TransformData>();
+            services.AddSingleton<SaveData>();
+        }
+
         private static void DisableWorkers(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting get data module");
-            provider.GetService<GetData>()
+            provider.GetService<GenerateData>()
                 .Disable();
 
             logger.LogInformation("starting transform data module");
@@ -71,7 +74,7 @@ namespace Bifröst.Playground
                 .Run();
 
             logger.LogInformation("starting get data module");
-            provider.GetService<GetData>()
+            provider.GetService<GenerateData>()
                 .Enable();
 
             logger.LogInformation("starting transform data module");
