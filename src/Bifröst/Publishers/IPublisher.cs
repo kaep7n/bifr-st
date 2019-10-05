@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Bifröst
+namespace Bifröst.Publishers
 {
     public interface IPublisher
     {

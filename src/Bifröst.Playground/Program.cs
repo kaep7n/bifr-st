@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Bifröst.Publishers;
+using Bifröst.Subscriptions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -12,7 +14,7 @@ namespace Bifröst.Playground
             b.AddConsole();
         });
 
-        static void Main(string[] args)
+        static void Main()
         {
             var logger = loggerFactory.CreateLogger<Program>();
 
@@ -21,9 +23,12 @@ namespace Bifröst.Playground
 
             services.AddLogging(b =>
             {
-                b.SetMinimumLevel(LogLevel.Information);
+                b.SetMinimumLevel(LogLevel.Trace);
                 b.AddConsole();
             });
+
+            services.AddTransient<AsyncActionSubscriptionFactory>();
+            services.AddTransient<PublisherFactory>();
             services.AddSingleton<IBus, Bus>();
 
             services.AddSingleton<GetData>();
@@ -33,49 +38,49 @@ namespace Bifröst.Playground
             logger.LogInformation("building service provider");
             var provider = services.BuildServiceProvider();
 
-            StartModules(logger, provider);
+            EnableWorkers(logger, provider);
 
             Console.ReadLine();
 
-            StopModules(logger, provider);
+            DisableWorkers(logger, provider);
         }
 
-        private static void StopModules(ILogger<Program> logger, ServiceProvider provider)
+        private static void DisableWorkers(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting get data module");
             provider.GetService<GetData>()
-                .Stop();
+                .Disable();
 
             logger.LogInformation("starting transform data module");
             provider.GetService<TransformData>()
-                .Stop();
+                .Disable();
 
             logger.LogInformation("starting save data module");
             provider.GetService<SaveData>()
-                .Stop();
+                .Disable();
 
             logger.LogInformation("stopping bus");
             provider.GetService<IBus>()
-                .Stop();
+                .Idle();
         }
 
-        private static void StartModules(ILogger<Program> logger, ServiceProvider provider)
+        private static void EnableWorkers(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting bus");
             provider.GetService<IBus>()
-                .Start();
+                .Run();
 
             logger.LogInformation("starting get data module");
             provider.GetService<GetData>()
-                .Start();
+                .Enable();
 
             logger.LogInformation("starting transform data module");
             provider.GetService<TransformData>()
-                .Start();
+                .Enable();
 
             logger.LogInformation("starting save data module");
             provider.GetService<SaveData>()
-                .Start();
+                .Enable();
         }
     }
 }

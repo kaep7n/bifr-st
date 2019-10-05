@@ -1,4 +1,5 @@
 ﻿using Bifröst.Extensions;
+using Bifröst.Subscriptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,14 +44,14 @@ namespace Bifröst
                 .ConfigureAwait(false);
         }
 
-        public void Start()
+        public void Run()
         {
             this.tokenSource = new CancellationTokenSource();
 
             Task.Run(() => this.ProcessAsync());
         }
 
-        public void Stop()
+        public void Idle()
         {
             this.tokenSource.Cancel();
         }

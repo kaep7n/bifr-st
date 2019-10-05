@@ -1,5 +1,5 @@
 ﻿using Bifröst.Playground.Events;
-using Bifröst.Playground.Modules;
+using Bifröst.Publishers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,67 +9,73 @@ using System.Timers;
 
 namespace Bifröst.Playground
 {
-    public class GetData : Worker, IDisposable
+    public class GetData : IDisposable
     {
-        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(30).TotalMilliseconds);
+        private readonly Timer timer = new Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+        private readonly ILogger<GetData> logger;
+        private readonly IPublisher publisher;
         private bool isDisposed = false;
 
-        public GetData(ILogger<GetData> logger, IBus bus)
-            : base(logger, bus)
+        public GetData(ILogger<GetData> logger, PublisherFactory publisherFactory)
         {
-            if (bus is null)
+            if (logger is null)
             {
-                throw new ArgumentNullException(nameof(bus));
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (publisherFactory is null)
+            {
+                throw new ArgumentNullException(nameof(publisherFactory));
             }
 
             this.timer.Elapsed += this.Timer_Elapsed;
+            this.logger = logger;
+            this.publisher = publisherFactory.Create();
         }
 
-        public override void Start()
+        public void Enable()
         {
-            base.Start();
             this.timer.Start();
         }
 
-        public override void Stop()
+        public void Disable()
         {
             this.timer.Stop();
-            base.Stop();
         }
 
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            this.Logger.LogDebug("get: data generation event elapsed");
+            this.logger.LogDebug("get: data generation event elapsed");
             
             var topic = new TopicBuilder("playground")
                 .With("data")
                 .With("rng")
                 .Build();
 
-            this.Logger.LogDebug("get: generating data");
+            this.logger.LogDebug("get: generating data");
             var generatedData = this.GenerateRandomData().ToList();
-            this.Logger.LogDebug("get: generating data completed");
+            this.logger.LogDebug("get: generating data completed");
 
             var watch = Stopwatch.StartNew();
-            this.Logger.LogInformation($"get: enqueing {generatedData.Count} events");
+            this.logger.LogInformation($"get: enqueing {generatedData.Count} events");
             foreach (var data in generatedData)
             {
-                this.Logger.LogDebug($"get: creating event for topic {topic} and data {data}");
+                this.logger.LogDebug($"get: creating event for topic {topic} and data {data}");
                 var evt = new ValueEvent(topic, data);
 
-                this.Logger.LogDebug("get: enququing event");
-                await this.Bus.EnqueueAsync(evt)
+                this.logger.LogDebug("get: enququing event");
+                await this.publisher.PublishAsync(evt)
                     .ConfigureAwait(false);
             }
 
-            this.Logger.LogInformation($"get: enqueing {generatedData.Count} events completed in {watch.ElapsedMilliseconds} ms");
+            this.logger.LogInformation($"get: enqueing {generatedData.Count} events completed in {watch.ElapsedMilliseconds} ms");
         }
 
         private IEnumerable<int> GenerateRandomData()
         {
             var rng = new Random();
 
-            for (var i = 0; i < 100_000; i++)
+            for (var i = 0; i < 100; i++)
             {
                 yield return rng.Next(65, 122);
             }

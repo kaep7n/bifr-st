@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Bifröst
+namespace Bifröst.Subscriptions
 {
     public class AsyncActionSubscription : Subscription
     {
         private readonly Func<IEvent, Task> asyncAction;
 
-        public AsyncActionSubscription(Func<IEvent, Task> asyncAction, Pattern pattern)
-            : base(pattern)
+        public AsyncActionSubscription(IBus bus, Pattern pattern, Func<IEvent, Task> asyncAction)
+            : base(bus, pattern)
         {
             if (asyncAction is null)
             {
@@ -25,7 +25,8 @@ namespace Bifröst
                 throw new ArgumentNullException(nameof(evt));
             }
 
-            await this.asyncAction(evt).ConfigureAwait(false);
+            await this.asyncAction(evt)
+                .ConfigureAwait(false);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Bifröst
+namespace Bifröst.Subscriptions
 {
     public interface ISubscription
     {

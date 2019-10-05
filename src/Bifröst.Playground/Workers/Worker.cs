@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bifröst.Subscriptions;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace Bifröst.Playground.Modules
@@ -27,9 +28,9 @@ namespace Bifröst.Playground.Modules
             this.Bus = bus;
         }
 
-        public virtual void Start()
+        public virtual void Enable()
         {
-            this.Logger.LogInformation("starting module");
+            this.Logger.LogInformation("starting worker");
 
             if (this.Subscription == null)
             {
@@ -43,9 +44,9 @@ namespace Bifröst.Playground.Modules
             this.Bus.Subscribe(this.Subscription);
         }
 
-        public virtual void Stop()
+        public virtual void Disable()
         {
-            this.Logger.LogInformation("stopping module");
+            this.Logger.LogInformation("stopping worker");
 
             if(this.Subscription == null)
             {
