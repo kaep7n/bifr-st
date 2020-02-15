@@ -39,7 +39,7 @@ namespace Bifröst
             this.subscriptions.Remove(subscription);
         }
 
-        public async Task EnqueueAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt)
         {
             await this.incomingChannel.Writer.WriteAsync(evt)
                 .ConfigureAwait(false);
@@ -69,7 +69,7 @@ namespace Bifröst
                 {
                     this.subscriptions
                         .Where(s => s.Matches(evt.Topic))
-                        .ForEach(async s => await s.EnqueueAsync(evt).ConfigureAwait(false));
+                        .ForEach(async s => await s.WriteAsync(evt).ConfigureAwait(false));
                 }
             }
             finally

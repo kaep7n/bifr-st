@@ -66,7 +66,7 @@ namespace Bifröst.Playground
             var asciiEvent = new AsciiEvent(topic, ascii);
             
             this.logger.LogDebug("transform: enqueuing event");
-            await this.publisher.PublishAsync(asciiEvent)
+            await this.publisher.WriteAsync(asciiEvent)
                 .ConfigureAwait(false);
         }
     }

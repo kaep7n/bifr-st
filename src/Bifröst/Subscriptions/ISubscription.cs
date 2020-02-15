@@ -17,6 +17,6 @@ namespace Bifröst.Subscriptions
         
         bool Matches(Topic topic);
         
-        Task EnqueueAsync(IEvent evt);
+        Task WriteAsync(IEvent evt);
     }
 }

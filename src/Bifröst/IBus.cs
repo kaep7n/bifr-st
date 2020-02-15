@@ -15,6 +15,6 @@ namespace Bifröst
         
         void Unsubscribe(ISubscription subscription);
 
-        Task EnqueueAsync(IEvent evt);
+        Task WriteAsync(IEvent evt);
     }
 }

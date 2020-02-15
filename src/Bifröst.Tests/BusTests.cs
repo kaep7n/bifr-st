@@ -57,7 +57,7 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
             
-            await bus.EnqueueAsync(expectedEvent);
+            await bus.WriteAsync(expectedEvent);
         }
 
         [Theory]
@@ -73,7 +73,7 @@ namespace Bifröst.Tests
             bus.Run();
             bus.Subscribe(subscription);
 
-            await bus.EnqueueAsync(evt);
+            await bus.WriteAsync(evt);
 
             Thread.Sleep(50);
             Assert.Collection(subscription.ReceivedEvents, e => Assert.Equal(evt, e));
@@ -93,7 +93,7 @@ namespace Bifröst.Tests
 
             foreach (var evt in events)
             {
-                await bus.EnqueueAsync(evt);
+                await bus.WriteAsync(evt);
             }
 
             Thread.Sleep(50);

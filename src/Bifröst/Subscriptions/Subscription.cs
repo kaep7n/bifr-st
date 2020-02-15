@@ -41,7 +41,7 @@ namespace Bifröst.Subscriptions
             return this.Pattern.Matches(topic);
         }
 
-        public async Task EnqueueAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt)
         {
             if (evt is null)
             {
@@ -59,12 +59,12 @@ namespace Bifröst.Subscriptions
 
             this.bus.Subscribe(this);
 
-            Task.Run(() => this.ProcessIncomingQueueAsync());
+            Task.Run(() => this.ProcessInput());
         }
 
         protected abstract Task ProcessEventAsync(IEvent evt);
 
-        private async Task ProcessIncomingQueueAsync()
+        private async Task ProcessInput()
         {
             try
             {
