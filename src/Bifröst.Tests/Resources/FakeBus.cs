@@ -11,7 +11,7 @@ namespace Bifröst.Tests.Resources
 
         public bool IsRunning { get; private set; }
 
-        public Task EnqueueAsync(IEvent evt)
+        public Task WriteAsync(IEvent evt)
         {
             this.enqueuedEvents.Add(evt);
             return Task.CompletedTask;

@@ -43,7 +43,7 @@ namespace Bifröst.Tests
             return this.Pattern.Matches(topic);
         }
 
-        public Task EnqueueAsync(IEvent evt)
+        public Task WriteAsync(IEvent evt)
         {
             this.receivedEvents.Add(evt);
             return Task.CompletedTask;

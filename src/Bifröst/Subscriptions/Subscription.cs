@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Bifröst.Subscriptions
 {
     public abstract class Subscription : IDisposable, ISubscription
     {
-        private readonly AsyncQueue<IEvent> incomingQueue = new AsyncQueue<IEvent>();
+        private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly IBus bus;
         private CancellationTokenSource tokenSource;
         private bool isDisposing = false;
@@ -40,14 +41,15 @@ namespace Bifröst.Subscriptions
             return this.Pattern.Matches(topic);
         }
 
-        public async Task EnqueueAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt)
         {
             if (evt is null)
             {
                 throw new ArgumentNullException(nameof(evt));
             }
 
-            await this.incomingQueue.EnqueueAsync(evt)
+            await this.incomingChannel.Writer
+                .WriteAsync(evt)
                 .ConfigureAwait(false);
         }
 
@@ -57,19 +59,20 @@ namespace Bifröst.Subscriptions
 
             this.bus.Subscribe(this);
 
-            Task.Run(() => this.ProcessIncomingQueueAsync());
+            Task.Run(() => this.ProcessInput());
         }
 
         protected abstract Task ProcessEventAsync(IEvent evt);
 
-        private async Task ProcessIncomingQueueAsync()
+        private async Task ProcessInput()
         {
             try
             {
                 this.IsEnabled = true;
 
-                await foreach (var evt in this.incomingQueue
-                                            .WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingChannel.Reader
+                    .ReadAllAsync()
+                    .WithCancellation(this.tokenSource.Token))
                 {
                     await this.ProcessEventAsync(evt)
                         .ConfigureAwait(false);
@@ -100,7 +103,6 @@ namespace Bifröst.Subscriptions
                 if (disposing)
                 {
                     this.tokenSource.Dispose();
-                    this.incomingQueue.Dispose();
                 }
 
                 this.isDisposing = true;

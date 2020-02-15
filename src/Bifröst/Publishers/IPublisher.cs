@@ -4,6 +4,6 @@ namespace Bifröst.Publishers
 {
     public interface IPublisher
     {
-        Task PublishAsync(IEvent evt);
+        Task WriteAsync(IEvent evt);
     }
 }

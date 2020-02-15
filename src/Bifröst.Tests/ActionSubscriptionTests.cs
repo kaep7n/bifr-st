@@ -93,7 +93,7 @@ namespace Bifröst.Tests
                 return Task.CompletedTask;
             });
 
-            await subscription.EnqueueAsync(expectedEvent);
+            await subscription.WriteAsync(expectedEvent);
 
             var wasReset = resetEvent.WaitOne(50);
             Assert.False(wasReset);
@@ -115,7 +115,7 @@ namespace Bifröst.Tests
             
             subscription.Enable();
 
-            await subscription.EnqueueAsync(evt);
+            await subscription.WriteAsync(evt);
             
             var wasReset = resetEvent.WaitOne(50);
             Assert.True(wasReset);
@@ -138,7 +138,7 @@ namespace Bifröst.Tests
                 return Task.CompletedTask;
             });
             
-            await subscription.EnqueueAsync(expectedEvent);
+            await subscription.WriteAsync(expectedEvent);
 
             subscription.Enable();
 

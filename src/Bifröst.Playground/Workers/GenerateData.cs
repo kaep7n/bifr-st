@@ -58,7 +58,7 @@ namespace Bifröst.Playground
                 var evt = new ValueEvent(topic, data);
 
                 this.logger.LogDebug("get: enququing event");
-                await this.publisher.PublishAsync(evt)
+                await this.publisher.WriteAsync(evt)
                     .ConfigureAwait(false);
             }
 

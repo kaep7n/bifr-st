@@ -17,14 +17,14 @@ namespace Bifröst.Publishers
             this.bus = bus;
         }
 
-        public async Task PublishAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt)
         {
             if (evt is null)
             {
                 throw new ArgumentNullException(nameof(evt));
             }
 
-            await this.bus.EnqueueAsync(evt)
+            await this.bus.WriteAsync(evt)
                 .ConfigureAwait(false);
         }
     }

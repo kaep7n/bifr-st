@@ -4,13 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Bifröst
 {
     public sealed class Bus : IBus, IDisposable
     {
-        private readonly AsyncQueue<IEvent> eventsQueue = new AsyncQueue<IEvent>();
+        private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -38,9 +39,9 @@ namespace Bifröst
             this.subscriptions.Remove(subscription);
         }
 
-        public async Task EnqueueAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt)
         {
-            await this.eventsQueue.EnqueueAsync(evt)
+            await this.incomingChannel.Writer.WriteAsync(evt)
                 .ConfigureAwait(false);
         }
 
@@ -62,11 +63,13 @@ namespace Bifröst
             {
                 this.IsRunning = true;
 
-                await foreach (var evt in this.eventsQueue.WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingChannel.Reader
+                    .ReadAllAsync()
+                    .WithCancellation(this.tokenSource.Token))
                 {
                     this.subscriptions
                         .Where(s => s.Matches(evt.Topic))
-                        .ForEach(async s => await s.EnqueueAsync(evt).ConfigureAwait(false));
+                        .ForEach(async s => await s.WriteAsync(evt).ConfigureAwait(false));
                 }
             }
             finally
@@ -81,7 +84,6 @@ namespace Bifröst
             {
                 if (disposing)
                 {
-                    this.eventsQueue.Dispose();
                     this.tokenSource.Dispose();
                 }
 
