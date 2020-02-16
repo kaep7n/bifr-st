@@ -1,12 +1,15 @@
 ﻿using Bifröst.Subscriptions;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace Bifröst.Tests
+namespace Bifröst.Tests.Resources
 {
     public class FakeSubscription : ISubscription
     {
+        private readonly AsyncAutoResetEvent waitBeforeWrite = new AsyncAutoResetEvent(false);
+        private readonly AsyncAutoResetEvent waitUntilWrite = new AsyncAutoResetEvent(false);
         private readonly List<IEvent> receivedEvents = new List<IEvent>();
 
         public FakeSubscription(Pattern pattern)
@@ -43,10 +46,17 @@ namespace Bifröst.Tests
             return this.Pattern.Matches(topic);
         }
 
-        public Task WriteAsync(IEvent evt)
+        public Task<bool> WaitUntilWrite(TimeSpan timeout) 
+            => this.waitUntilWrite.WaitAsync(timeout);
+
+        public void ContinueWrite() 
+            => this.waitBeforeWrite.Set();
+
+        public async Task WriteAsync(IEvent evt)
         {
+            await this.waitBeforeWrite.WaitAsync(TimeSpan.FromSeconds(1));
             this.receivedEvents.Add(evt);
-            return Task.CompletedTask;
+            this.waitUntilWrite.Set();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Xunit;
 
-namespace Bifröst.Tests
+namespace Bifröst.Tests.Resources
 {
     public class SingleEventData : TheoryData<IEvent>
     {

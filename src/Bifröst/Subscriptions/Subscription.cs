@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -36,10 +35,7 @@ namespace Bifröst.Subscriptions
 
         public bool IsEnabled { get; private set; }
 
-        public bool Matches(Topic topic)
-        {
-            return this.Pattern.Matches(topic);
-        }
+        public bool Matches(Topic topic) => this.Pattern.Matches(topic);
 
         public async Task WriteAsync(IEvent evt)
         {
@@ -70,9 +66,7 @@ namespace Bifröst.Subscriptions
             {
                 this.IsEnabled = true;
 
-                await foreach (var evt in this.incomingChannel.Reader
-                    .ReadAllAsync()
-                    .WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
                     await this.ProcessEventAsync(evt)
                         .ConfigureAwait(false);

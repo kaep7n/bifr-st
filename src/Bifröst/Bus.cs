@@ -11,6 +11,10 @@ namespace Bifröst
 {
     public sealed class Bus : IBus, IDisposable
     {
+        private long waitingEventCount = 0;
+        private long processedEventCount = 0;
+        private long failedEventCount = 0;
+
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
@@ -18,6 +22,12 @@ namespace Bifröst
         private bool isDisposing = false;
 
         public bool IsRunning { get; private set; }
+
+        public long WaitingEventCount => this.waitingEventCount;
+
+        public long ProcessedEventCount => this.processedEventCount;
+
+        public long FailedEventCount => this.failedEventCount;
 
         public void Subscribe(ISubscription subscription)
         {
@@ -43,13 +53,15 @@ namespace Bifröst
         {
             await this.incomingChannel.Writer.WriteAsync(evt)
                 .ConfigureAwait(false);
+
+            Interlocked.Increment(ref this.waitingEventCount);
         }
 
         public void Run()
         {
             this.tokenSource = new CancellationTokenSource();
 
-            Task.Run(() => this.ProcessAsync());
+            Task.Run(async () => await this.ProcessAsync().ConfigureAwait(false));
         }
 
         public void Idle()
@@ -63,13 +75,15 @@ namespace Bifröst
             {
                 this.IsRunning = true;
 
-                await foreach (var evt in this.incomingChannel.Reader
-                    .ReadAllAsync()
-                    .WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
+                    Interlocked.Decrement(ref this.waitingEventCount);
+
                     this.subscriptions
                         .Where(s => s.Matches(evt.Topic))
                         .ForEach(async s => await s.WriteAsync(evt).ConfigureAwait(false));
+
+                    Interlocked.Increment(ref this.processedEventCount);
                 }
             }
             finally
