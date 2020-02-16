@@ -11,7 +11,7 @@ namespace Bifröst
 {
     public sealed class Bus : IBus, IDisposable
     {
-        private long waitingEventCount = 0;
+        private long writtenEventCount = 0;
         private long processedEventCount = 0;
         private long failedEventCount = 0;
 
@@ -23,7 +23,7 @@ namespace Bifröst
 
         public bool IsRunning { get; private set; }
 
-        public long WaitingEventCount => this.waitingEventCount;
+        public long WaitingEventCount => this.writtenEventCount - this.processedEventCount;
 
         public long ProcessedEventCount => this.processedEventCount;
 
@@ -54,7 +54,7 @@ namespace Bifröst
             await this.incomingChannel.Writer.WriteAsync(evt)
                 .ConfigureAwait(false);
 
-            Interlocked.Increment(ref this.waitingEventCount);
+            this.writtenEventCount++;
         }
 
         public void Run()
@@ -77,13 +77,14 @@ namespace Bifröst
 
                 await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
-                    Interlocked.Decrement(ref this.waitingEventCount);
+                    var matchedSubscriptions = this.subscriptions.Where(s => s.Matches(evt.Topic));
 
-                    this.subscriptions
-                        .Where(s => s.Matches(evt.Topic))
-                        .ForEach(async s => await s.WriteAsync(evt).ConfigureAwait(false));
+                    foreach (var sub in matchedSubscriptions)
+                    {
+                        await sub.WriteAsync(evt).ConfigureAwait(false);
+                    }
 
-                    Interlocked.Increment(ref this.processedEventCount);
+                    this.processedEventCount++;
                 }
             }
             finally
