@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Bifröst.Tests
+namespace Bifröst.Tests.Resources
 {
     public class FakeEvent : IEvent
     {

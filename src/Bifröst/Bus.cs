@@ -1,5 +1,4 @@
-﻿using Bifröst.Extensions;
-using Bifröst.Subscriptions;
+﻿using Bifröst.Subscriptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +8,15 @@ using System.Threading.Tasks;
 
 namespace Bifröst
 {
-    public sealed class Bus : IBus, IDisposable
+
+    public sealed class Bus : IBus, IMetricsProvider, IDisposable
     {
+        private long receivedEventsCount = 0;
+        private long processedEventCount = 0;
+
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
-
+        
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private bool isDisposing = false;
 
@@ -43,13 +46,15 @@ namespace Bifröst
         {
             await this.incomingChannel.Writer.WriteAsync(evt)
                 .ConfigureAwait(false);
+
+            this.receivedEventsCount++;
         }
 
         public void Run()
         {
             this.tokenSource = new CancellationTokenSource();
 
-            Task.Run(() => this.ProcessAsync());
+            Task.Run(async () => await this.ProcessAsync().ConfigureAwait(false));
         }
 
         public void Idle()
@@ -63,13 +68,16 @@ namespace Bifröst
             {
                 this.IsRunning = true;
 
-                await foreach (var evt in this.incomingChannel.Reader
-                    .ReadAllAsync()
-                    .WithCancellation(this.tokenSource.Token))
+                await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
-                    this.subscriptions
-                        .Where(s => s.Matches(evt.Topic))
-                        .ForEach(async s => await s.WriteAsync(evt).ConfigureAwait(false));
+                    var matchedSubscriptions = this.subscriptions.Where(s => s.Matches(evt.Topic));
+
+                    foreach (var sub in matchedSubscriptions)
+                    {
+                        await sub.WriteAsync(evt).ConfigureAwait(false);
+                    }
+
+                    this.processedEventCount++;
                 }
             }
             finally
@@ -94,6 +102,13 @@ namespace Bifröst
         public void Dispose()
         {
             this.Dispose(true);
+        }
+
+        public IEnumerable<Metric> GetMetrics()
+        {
+            yield return new Metric(Metrics.BUS_RECEIVED_EVENTS, this.receivedEventsCount);
+            yield return new Metric(Metrics.BUS_PROCESSED_EVENTS, this.processedEventCount);
+            yield return new Metric(Metrics.BUS_IS_RUNNING, this.IsRunning);
         }
     }
 }

@@ -76,7 +76,7 @@ namespace Bifröst.Tests
         }
 
         [Fact]
-        public async Task EnqueueAsync_when_not_enabled_should_not_call_registered_action()
+        public async Task WriteAsync_when_not_enabled_should_not_call_registered_action()
         {
             using var resetEvent = new ManualResetEvent(false);
 
@@ -101,7 +101,7 @@ namespace Bifröst.Tests
 
         [Theory]
         [ClassData(typeof(SingleEventData))]
-        public async Task EnqueueAsync_after_Enabled_should_call_registered_action(IEvent evt)
+        public async Task WriteAsync_after_Enabled_should_call_registered_action(IEvent evt)
         {
             using var resetEvent = new ManualResetEvent(false);
 
@@ -121,8 +121,49 @@ namespace Bifröst.Tests
             Assert.True(wasReset);
         }
 
+        [Theory]
+        [ClassData(typeof(SingleEventData))]
+        public async Task WriteAsync_should_set_metric_received_events_to_one(IEvent evt)
+        {
+            var bus = new FakeBus();
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
+            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+
+            subscription.Enable();
+
+            await subscription.WriteAsync(evt);
+
+            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.SUB_RECEIVED_EVENTS);
+            Assert.Equal(1L, metric.Value);
+        }
+
+        [Theory]
+        [ClassData(typeof(SingleEventData))]
+        public async Task WriteAsync_should_set_metric_processed_events_to_one(IEvent evt)
+        {
+            using var resetEvent = new ManualResetEvent(false);
+
+            var bus = new FakeBus();
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
+            var subscription = new AsyncActionSubscription(bus, pattern, e =>
+            {
+                resetEvent.Set();
+                return Task.CompletedTask;
+            });
+
+            subscription.Enable();
+
+            await subscription.WriteAsync(evt);
+
+            var wasReset = resetEvent.WaitOne(50);
+            Assert.True(wasReset);
+
+            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.SUB_PROCESSED_EVENTS);
+            Assert.Equal(1L, metric.Value);
+        }
+
         [Fact]
-        public async Task EnqueueAsync_before_Enabled_should_call_registered_action_after_enabled()
+        public async Task WriteAsync_before_Enabled_should_call_registered_action_after_enabled()
         {
             using var resetEvent = new ManualResetEvent(false);
 

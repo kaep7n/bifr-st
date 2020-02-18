@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Xunit;
 
-namespace Bifröst.Tests
+namespace Bifröst.Tests.Resources
 {
     public class MultipleEventsData : TheoryData<Topic, IEnumerable<IEvent>>
     {
