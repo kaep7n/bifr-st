@@ -7,12 +7,6 @@ namespace Bifröst
     {
         bool IsRunning { get; }
         
-        long WaitingEventCount { get; }
-
-        long ProcessedEventCount { get; }
-
-        long FailedEventCount { get; }
-
         void Run();
         
         void Idle();

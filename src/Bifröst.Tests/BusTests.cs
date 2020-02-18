@@ -84,18 +84,21 @@ namespace Bifröst.Tests
 
         [Theory]
         [ClassData(typeof(SingleEventData))]
-        public async Task WriteAsync_should_increment_waiting_event_count_to_one(IEvent evt)
+        public async Task WriteAsync_should_set_metric_received_events_to_one(IEvent evt)
         {
             using var bus = new Bus();
             
             await bus.WriteAsync(evt);
 
-            Assert.Equal(1, bus.WaitingEventCount);
+            var metrics = bus.GetMetrics();
+
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_RECEIVED_EVENTS);
+            Assert.Equal(1L, metric.Value);
         }
 
         [Theory]
         [ClassData(typeof(MultipleEventsData))]
-        public async Task WriteAsync_should_increment_waiting_event_count_to_input_event_count(Topic topic, IEnumerable<IEvent> events)
+        public async Task WriteAsync_should_set_metric_received_events_to_input_event_count(Topic topic, IEnumerable<IEvent> events)
         {
             using var bus = new Bus();
 
@@ -103,8 +106,11 @@ namespace Bifröst.Tests
             {
                 await bus.WriteAsync(evt);
             }
+            
+            var metrics = bus.GetMetrics();
 
-            Assert.Equal(events.Count(), bus.WaitingEventCount);
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_RECEIVED_EVENTS);
+            Assert.Equal(events.LongCount(), metric.Value);
         }
 
         [Theory]
@@ -124,7 +130,10 @@ namespace Bifröst.Tests
             subscription.ContinueWrite();
             await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(100));
 
-            Assert.Equal(1, bus.ProcessedEventCount);
+            var metrics = bus.GetMetrics();
+
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_PROCESSED_EVENTS);
+            Assert.Equal(1L, metric.Value);
         }
 
         [Theory]
@@ -146,7 +155,10 @@ namespace Bifröst.Tests
                 await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(100));
             }
 
-            Assert.Equal(events.Count(), bus.ProcessedEventCount);
+            var metrics = bus.GetMetrics();
+
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_PROCESSED_EVENTS);
+            Assert.Equal(events.LongCount(), metric.Value);
         }
 
         [Theory]
