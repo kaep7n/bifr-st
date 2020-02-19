@@ -15,3 +15,5 @@ jobs:
         dotnet-version: 3.1.101
     - name: build
       run: dotnet build src/bifröst.sln --configuration Release
+    - name: test
+      run: dotnet test src/bifröst.sln --logger trx
