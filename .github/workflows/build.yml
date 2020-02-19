@@ -17,3 +17,10 @@ jobs:
       run: dotnet build src/bifröst.sln --configuration Release
     - name: test
       run: dotnet test src/bifröst.sln --logger trx
+    - name: upload test results
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: test results
+        # Directory containing files to upload
+        path: /**/*.trx
