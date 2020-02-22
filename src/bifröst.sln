@@ -10,8 +10,18 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bifröst.Playground", "Bifröst.Playground\Bifröst.Playground.csproj", "{3A260F27-F53B-4B58-92FC-39A35BD28AC7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{4427E6DF-EAC5-4D40-864D-1CF76B227B14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{D6D175DC-00B2-483D-85E7-9E65F4A0A840}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure", "azure", "{A2663D70-1AAF-413E-BB1B-7A045975B55B}"
 	ProjectSection(SolutionItems) = preProject
-		..\azure-pipelines.yml = ..\azure-pipelines.yml
+		..\.azure\build.yml = ..\.azure\build.yml
+		..\.azure\release.yml = ..\.azure\release.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{8565CE86-60D1-4545-A38F-C6DE111B05F1}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
 	EndProjectSection
 EndProject
 Global
@@ -35,6 +45,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D6D175DC-00B2-483D-85E7-9E65F4A0A840} = {4427E6DF-EAC5-4D40-864D-1CF76B227B14}
+		{A2663D70-1AAF-413E-BB1B-7A045975B55B} = {4427E6DF-EAC5-4D40-864D-1CF76B227B14}
+		{8565CE86-60D1-4545-A38F-C6DE111B05F1} = {D6D175DC-00B2-483D-85E7-9E65F4A0A840}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CD619F5E-B92B-4B34-A6A3-03FB8559E056}

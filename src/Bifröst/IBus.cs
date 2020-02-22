@@ -7,9 +7,9 @@ namespace Bifröst
     {
         bool IsRunning { get; }
         
-        void Run();
+        Task RunAsync();
         
-        void Idle();
+        Task IdleAsync();
         
         void Subscribe(ISubscription subscription);
         

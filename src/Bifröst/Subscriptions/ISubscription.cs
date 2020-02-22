@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Bifröst.Subscriptions
@@ -17,6 +18,6 @@ namespace Bifröst.Subscriptions
         
         bool Matches(Topic topic);
         
-        Task WriteAsync(IEvent evt);
+        Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default);
     }
 }

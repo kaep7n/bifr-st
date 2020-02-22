@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 namespace Bifröst
 {
 
-    public sealed class Bus : IBus, IMetricsProvider, IDisposable
+    public sealed class Bus : IBus, IMetrics, IDisposable
     {
+        private readonly AsyncAutoResetEvent runEvent = new AsyncAutoResetEvent(false);
+        private readonly AsyncAutoResetEvent idleEvent = new AsyncAutoResetEvent(false);
+
         private long receivedEventsCount = 0;
         private long processedEventCount = 0;
 
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
-        
+
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private bool isDisposing = false;
 
@@ -50,16 +53,22 @@ namespace Bifröst
             this.receivedEventsCount++;
         }
 
-        public void Run()
+        public async Task RunAsync()
         {
             this.tokenSource = new CancellationTokenSource();
 
-            Task.Run(async () => await this.ProcessAsync().ConfigureAwait(false));
+            _ = Task.Run(() => this.ProcessAsync());
+
+            await this.runEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+                .ConfigureAwait(false);
         }
 
-        public void Idle()
+        public async Task IdleAsync()
         {
             this.tokenSource.Cancel();
+
+            await this.idleEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+                .ConfigureAwait(false);
         }
 
         private async Task ProcessAsync()
@@ -67,14 +76,27 @@ namespace Bifröst
             try
             {
                 this.IsRunning = true;
+                this.runEvent.Set();
 
                 await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
                     var matchedSubscriptions = this.subscriptions.Where(s => s.Matches(evt.Topic));
 
-                    foreach (var sub in matchedSubscriptions)
+                    var forwardingTasks = new List<Task>();
+
+                    foreach (var subscriber in matchedSubscriptions)
                     {
-                        await sub.WriteAsync(evt).ConfigureAwait(false);
+                        using var cancellationTokenSource = new CancellationTokenSource();
+                        cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(10));
+
+                        try
+                        {
+                            await subscriber.WriteAsync(evt, cancellationTokenSource.Token)
+                                    .ConfigureAwait(false);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                        }
                     }
 
                     this.processedEventCount++;
@@ -83,6 +105,7 @@ namespace Bifröst
             finally
             {
                 this.IsRunning = false;
+                this.idleEvent.Set();
             }
         }
 
@@ -106,9 +129,9 @@ namespace Bifröst
 
         public IEnumerable<Metric> GetMetrics()
         {
-            yield return new Metric(Metrics.BUS_RECEIVED_EVENTS, this.receivedEventsCount);
-            yield return new Metric(Metrics.BUS_PROCESSED_EVENTS, this.processedEventCount);
-            yield return new Metric(Metrics.BUS_IS_RUNNING, this.IsRunning);
+            yield return new Metric(Metrics.Bus.ReceivedEvents, this.receivedEventsCount);
+            yield return new Metric(Metrics.Bus.ProcessedEvents, this.processedEventCount);
+            yield return new Metric(Metrics.Bus.IsRunning, this.IsRunning);
         }
     }
 }

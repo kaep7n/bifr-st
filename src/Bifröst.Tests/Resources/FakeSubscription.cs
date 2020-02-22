@@ -11,8 +11,9 @@ namespace Bifröst.Tests.Resources
         private readonly AsyncAutoResetEvent waitBeforeWrite = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent waitUntilWrite = new AsyncAutoResetEvent(false);
         private readonly List<IEvent> receivedEvents = new List<IEvent>();
+        private readonly TimeSpan waitBeforeWriteTimeout;
 
-        public FakeSubscription(Pattern pattern)
+        public FakeSubscription(Pattern pattern, TimeSpan waitBeforeWriteTimeout)
         {
             if (pattern is null)
             {
@@ -21,6 +22,7 @@ namespace Bifröst.Tests.Resources
 
             this.Id = Guid.NewGuid();
             this.Pattern = pattern;
+            this.waitBeforeWriteTimeout = waitBeforeWriteTimeout;
         }
 
         public Guid Id { get; }
@@ -32,19 +34,13 @@ namespace Bifröst.Tests.Resources
         public IEnumerable<IEvent> ReceivedEvents => this.receivedEvents;
 
         public void Disable()
-        {
-            this.IsEnabled = false;
-        }
+            => this.IsEnabled = false;
 
         public void Enable()
-        {
-            this.IsEnabled = true;
-        }
-        
+            => this.IsEnabled = true;
+
         public bool Matches(Topic topic)
-        {
-            return this.Pattern.Matches(topic);
-        }
+            => this.Pattern.Matches(topic);
 
         public Task<bool> WaitUntilWrite(TimeSpan timeout) 
             => this.waitUntilWrite.WaitAsync(timeout);
@@ -52,9 +48,9 @@ namespace Bifröst.Tests.Resources
         public void ContinueWrite() 
             => this.waitBeforeWrite.Set();
 
-        public async Task WriteAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default)
         {
-            await this.waitBeforeWrite.WaitAsync(TimeSpan.FromSeconds(1));
+            await this.waitBeforeWrite.WaitAsync(this.waitBeforeWriteTimeout, cancellationToken);
             this.receivedEvents.Add(evt);
             this.waitUntilWrite.Set();
         }

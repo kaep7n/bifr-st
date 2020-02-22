@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Bifröst.Tests.Resources
+namespace Bifröst
 {
     public class AsyncAutoResetEvent
     {
@@ -13,14 +12,10 @@ namespace Bifröst.Tests.Resources
         private bool isSignaled;
 
         public AsyncAutoResetEvent(bool signaled)
-        {
-            this.isSignaled = signaled;
-        }
+            => this.isSignaled = signaled;
 
         public Task<bool> WaitAsync(TimeSpan timeout)
-        {
-            return this.WaitAsync(timeout, CancellationToken.None);
-        }
+            => this.WaitAsync(timeout, CancellationToken.None);
 
         public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -44,7 +39,9 @@ namespace Bifröst.Tests.Resources
                 }
             }
 
-            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken));
+            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken))
+                .ConfigureAwait(false);
+
             if (winner == tcs.Task)
             {
                 // The task was signaled.
@@ -56,8 +53,13 @@ namespace Bifröst.Tests.Resources
                 // This is an O(n) operation since waiters is a LinkedList<T>.
                 lock (this.waiters)
                 {
-                    var removed = this.waiters.Remove(tcs);
-                    Debug.Assert(removed);
+                    this.waiters.Remove(tcs);
+
+                    if(winner.IsCanceled)
+                    {
+                        throw new TaskCanceledException();
+                    }
+
                     return false;
                 }
             }
@@ -85,8 +87,6 @@ namespace Bifröst.Tests.Resources
         }
 
         public override string ToString()
-        {
-            return $"Signaled: {this.isSignaled.ToString()}, Waiters: {this.waiters.Count.ToString()}";
-        }
+            => $"Signaled: {this.isSignaled.ToString()}, Waiters: {this.waiters.Count.ToString()}";
     }
 }
