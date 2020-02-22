@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Bifröst.Subscriptions
 {
-    public abstract class Subscription : IDisposable, ISubscription, IMetricsProvider
+    public abstract class Subscription : ISubscription, IMetrics, IDisposable
     {
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly IBus bus;
+        
         private CancellationTokenSource tokenSource;
         private bool isDisposing = false;
 
@@ -41,7 +42,7 @@ namespace Bifröst.Subscriptions
 
         public bool Matches(Topic topic) => this.Pattern.Matches(topic);
 
-        public async Task WriteAsync(IEvent evt)
+        public async Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default)
         {
             if (evt is null)
             {
@@ -49,7 +50,7 @@ namespace Bifröst.Subscriptions
             }
 
             await this.incomingChannel.Writer
-                .WriteAsync(evt)
+                .WriteAsync(evt, cancellationToken)
                 .ConfigureAwait(false);
 
             this.receivedEvents++;

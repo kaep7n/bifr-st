@@ -39,7 +39,9 @@ namespace Bifröst
                 }
             }
 
-            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken));
+            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken))
+                .ConfigureAwait(false);
+
             if (winner == tcs.Task)
             {
                 // The task was signaled.
@@ -51,8 +53,13 @@ namespace Bifröst
                 // This is an O(n) operation since waiters is a LinkedList<T>.
                 lock (this.waiters)
                 {
-                    var removed = this.waiters.Remove(tcs);
-                    Debug.Assert(removed);
+                    this.waiters.Remove(tcs);
+
+                    if(winner.IsCanceled)
+                    {
+                        throw new TaskCanceledException();
+                    }
+
                     return false;
                 }
             }

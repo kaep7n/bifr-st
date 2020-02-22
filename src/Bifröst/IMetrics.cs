@@ -2,7 +2,7 @@
 
 namespace Bifröst
 {
-    public interface IMetricsProvider
+    public interface IMetrics
     {
         IEnumerable<Metric> GetMetrics();
     }

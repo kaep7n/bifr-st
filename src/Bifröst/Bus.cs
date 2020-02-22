@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Bifröst
 {
 
-    public sealed class Bus : IBus, IMetricsProvider, IDisposable
+    public sealed class Bus : IBus, IMetrics, IDisposable
     {
         private readonly AsyncAutoResetEvent runEvent = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent idleEvent = new AsyncAutoResetEvent(false);
@@ -19,7 +19,7 @@ namespace Bifröst
 
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
-        
+
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private bool isDisposing = false;
 
@@ -82,9 +82,21 @@ namespace Bifröst
                 {
                     var matchedSubscriptions = this.subscriptions.Where(s => s.Matches(evt.Topic));
 
-                    foreach (var sub in matchedSubscriptions)
+                    var forwardingTasks = new List<Task>();
+
+                    foreach (var subscriber in matchedSubscriptions)
                     {
-                        await sub.WriteAsync(evt).ConfigureAwait(false);
+                        using var cancellationTokenSource = new CancellationTokenSource();
+                        cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(10));
+
+                        try
+                        {
+                            await subscriber.WriteAsync(evt, cancellationTokenSource.Token)
+                                    .ConfigureAwait(false);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                        }
                     }
 
                     this.processedEventCount++;
