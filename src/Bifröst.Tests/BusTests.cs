@@ -10,6 +10,8 @@ namespace Bifröst.Tests
 {
     public partial class BusTests
     {
+        private const int WaitTimeout = 10;
+
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
         {
@@ -19,33 +21,28 @@ namespace Bifröst.Tests
         }
 
         [Fact]
-        public void Run_then_Idle_should_set_IsRunning_accordingly()
+        public async Task RunAsync_then_Idle_should_set_IsRunning_accordingly()
         {
             using var bus = new Bus();
-            bus.Run();
-
-            Thread.Sleep(10);
+            await bus.RunAsync();
             Assert.True(bus.IsRunning);
 
-            bus.Idle();
-            Thread.Sleep(10);
+            await bus.IdleAsync();
             Assert.False(bus.IsRunning);
         }
 
         [Theory]
         [InlineData(3)]
-        public void Run_then_Idle_multiple_times_should_set_IsRunning_accordingly(int times)
+        public async Task Run_then_Idle_multiple_times_should_set_IsRunning_accordingly(int times)
         {
             using var bus = new Bus();
 
             for (var i = 0; i < times; i++)
             {
-                bus.Run();
-                Thread.Sleep(10);
+                await bus.RunAsync();
                 Assert.True(bus.IsRunning);
 
-                bus.Idle();
-                Thread.Sleep(10);
+                await bus.IdleAsync();
                 Assert.False(bus.IsRunning);
             }
         }
@@ -72,12 +69,12 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
 
-            bus.Run();
+            await bus.RunAsync();
             bus.Subscribe(subscription);
 
             await bus.WriteAsync(evt);
             subscription.ContinueWrite();
-            await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(100));
+            await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(WaitTimeout));
 
             Assert.Collection(subscription.ReceivedEvents, e => Assert.Equal(evt, e));
         }
@@ -92,7 +89,7 @@ namespace Bifröst.Tests
 
             var metrics = bus.GetMetrics();
 
-            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_RECEIVED_EVENTS);
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ReceivedEvents);
             Assert.Equal(1L, metric.Value);
         }
 
@@ -109,7 +106,7 @@ namespace Bifröst.Tests
             
             var metrics = bus.GetMetrics();
 
-            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_RECEIVED_EVENTS);
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ReceivedEvents);
             Assert.Equal(events.LongCount(), metric.Value);
         }
 
@@ -123,7 +120,7 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
 
-            bus.Run();
+            await bus.RunAsync();
             bus.Subscribe(subscription);
 
             await bus.WriteAsync(evt);
@@ -132,7 +129,30 @@ namespace Bifröst.Tests
 
             var metrics = bus.GetMetrics();
 
-            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_PROCESSED_EVENTS);
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ProcessedEvents);
+            Assert.Equal(1L, metric.Value);
+        }
+
+        [Theory]
+        [ClassData(typeof(SingleEventData))]
+        public async Task WriteAsync_should_forward_event_to_subscribers_even_if_one_is_blocking(IEvent evt)
+        {
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
+            var subscription = new FakeSubscription(pattern);
+            subscription.Enable();
+
+            using var bus = new Bus();
+
+            await bus.RunAsync();
+            bus.Subscribe(subscription);
+
+            await bus.WriteAsync(evt);
+            subscription.ContinueWrite();
+            await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(100));
+
+            var metrics = bus.GetMetrics();
+
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ProcessedEvents);
             Assert.Equal(1L, metric.Value);
         }
 
@@ -145,19 +165,19 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
 
-            bus.Run();
+            await bus.RunAsync();
             bus.Subscribe(subscription);
 
             foreach (var evt in events)
             {
                 await bus.WriteAsync(evt);
                 subscription.ContinueWrite();
-                await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(100));
+                await subscription.WaitUntilWrite(TimeSpan.FromMilliseconds(WaitTimeout));
             }
 
             var metrics = bus.GetMetrics();
 
-            var metric = Assert.Single(metrics, m => m.Name == Metrics.BUS_PROCESSED_EVENTS);
+            var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ProcessedEvents);
             Assert.Equal(events.LongCount(), metric.Value);
         }
 
@@ -170,7 +190,7 @@ namespace Bifröst.Tests
 
             using var bus = new Bus();
            
-            bus.Run();
+            await bus.RunAsync();
             bus.Subscribe(subscription);
             
             subscription.ContinueWrite();

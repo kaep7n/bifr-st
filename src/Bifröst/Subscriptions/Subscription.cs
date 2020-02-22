@@ -113,9 +113,9 @@ namespace Bifröst.Subscriptions
 
         public virtual IEnumerable<Metric> GetMetrics()
         {
-            yield return new Metric(Metrics.SUB_RECEIVED_EVENTS, this.receivedEvents);
-            yield return new Metric(Metrics.SUB_PROCESSED_EVENTS, this.processedEvents);
-            yield return new Metric(Metrics.SUB_IS_ENABLED, this.IsEnabled);
+            yield return new Metric(Metrics.Subscription.ReceivedEvents, this.receivedEvents);
+            yield return new Metric(Metrics.Subscription.ProcessedEvents, this.processedEvents);
+            yield return new Metric(Metrics.Subscription.IsEnabled, this.IsEnabled);
         }
     }
 }

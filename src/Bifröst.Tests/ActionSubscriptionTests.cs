@@ -133,7 +133,7 @@ namespace Bifröst.Tests
 
             await subscription.WriteAsync(evt);
 
-            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.SUB_RECEIVED_EVENTS);
+            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.Subscription.ReceivedEvents);
             Assert.Equal(1L, metric.Value);
         }
 
@@ -158,7 +158,7 @@ namespace Bifröst.Tests
             var wasReset = resetEvent.WaitOne(50);
             Assert.True(wasReset);
 
-            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.SUB_PROCESSED_EVENTS);
+            var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.Subscription.ProcessedEvents);
             Assert.Equal(1L, metric.Value);
         }
 

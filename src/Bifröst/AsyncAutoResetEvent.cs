@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Bifröst.Tests.Resources
+namespace Bifröst
 {
     public class AsyncAutoResetEvent
     {
@@ -13,14 +12,10 @@ namespace Bifröst.Tests.Resources
         private bool isSignaled;
 
         public AsyncAutoResetEvent(bool signaled)
-        {
-            this.isSignaled = signaled;
-        }
+            => this.isSignaled = signaled;
 
         public Task<bool> WaitAsync(TimeSpan timeout)
-        {
-            return this.WaitAsync(timeout, CancellationToken.None);
-        }
+            => this.WaitAsync(timeout, CancellationToken.None);
 
         public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -85,8 +80,6 @@ namespace Bifröst.Tests.Resources
         }
 
         public override string ToString()
-        {
-            return $"Signaled: {this.isSignaled.ToString()}, Waiters: {this.waiters.Count.ToString()}";
-        }
+            => $"Signaled: {this.isSignaled.ToString()}, Waiters: {this.waiters.Count.ToString()}";
     }
 }

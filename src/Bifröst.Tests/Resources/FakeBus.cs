@@ -23,14 +23,16 @@ namespace Bifröst.Tests.Resources
             return Task.CompletedTask;
         }
 
-        public void Idle()
+        public Task IdleAsync()
         {
             this.IsRunning = false;
+            return Task.CompletedTask;
         }
 
-        public void Run()
+        public Task RunAsync()
         {
             this.IsRunning = true;
+            return Task.CompletedTask;
         }
 
         public void Subscribe(ISubscription subscription)

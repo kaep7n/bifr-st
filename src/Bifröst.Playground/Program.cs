@@ -64,14 +64,14 @@ namespace Bifröst.Playground
 
             logger.LogInformation("stopping bus");
             provider.GetService<IBus>()
-                .Idle();
+                .IdleAsync();
         }
 
         private static void EnableWorkers(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting bus");
             provider.GetService<IBus>()
-                .Run();
+                .RunAsync();
 
             logger.LogInformation("starting get data module");
             provider.GetService<GenerateData>()

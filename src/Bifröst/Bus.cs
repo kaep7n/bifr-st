@@ -11,6 +11,9 @@ namespace Bifröst
 
     public sealed class Bus : IBus, IMetricsProvider, IDisposable
     {
+        private readonly AsyncAutoResetEvent runEvent = new AsyncAutoResetEvent(false);
+        private readonly AsyncAutoResetEvent idleEvent = new AsyncAutoResetEvent(false);
+
         private long receivedEventsCount = 0;
         private long processedEventCount = 0;
 
@@ -50,16 +53,22 @@ namespace Bifröst
             this.receivedEventsCount++;
         }
 
-        public void Run()
+        public async Task RunAsync()
         {
             this.tokenSource = new CancellationTokenSource();
 
-            Task.Run(async () => await this.ProcessAsync().ConfigureAwait(false));
+            _ = Task.Run(() => this.ProcessAsync());
+
+            await this.runEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+                .ConfigureAwait(false);
         }
 
-        public void Idle()
+        public async Task IdleAsync()
         {
             this.tokenSource.Cancel();
+
+            await this.idleEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+                .ConfigureAwait(false);
         }
 
         private async Task ProcessAsync()
@@ -67,6 +76,7 @@ namespace Bifröst
             try
             {
                 this.IsRunning = true;
+                this.runEvent.Set();
 
                 await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
@@ -83,6 +93,7 @@ namespace Bifröst
             finally
             {
                 this.IsRunning = false;
+                this.idleEvent.Set();
             }
         }
 
@@ -106,9 +117,9 @@ namespace Bifröst
 
         public IEnumerable<Metric> GetMetrics()
         {
-            yield return new Metric(Metrics.BUS_RECEIVED_EVENTS, this.receivedEventsCount);
-            yield return new Metric(Metrics.BUS_PROCESSED_EVENTS, this.processedEventCount);
-            yield return new Metric(Metrics.BUS_IS_RUNNING, this.IsRunning);
+            yield return new Metric(Metrics.Bus.ReceivedEvents, this.receivedEventsCount);
+            yield return new Metric(Metrics.Bus.ProcessedEvents, this.processedEventCount);
+            yield return new Metric(Metrics.Bus.IsRunning, this.IsRunning);
         }
     }
 }
