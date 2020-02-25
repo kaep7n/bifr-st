@@ -1,6 +1,7 @@
 ﻿using Bifröst.Subscriptions;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Bifröst.Playground.Modules
 {
@@ -28,7 +29,7 @@ namespace Bifröst.Playground.Modules
             this.Bus = bus;
         }
 
-        public virtual void Enable()
+        public virtual async Task EnableAsync()
         {
             this.Logger.LogInformation("starting worker");
 
@@ -38,13 +39,13 @@ namespace Bifröst.Playground.Modules
             }
 
             this.Logger.LogInformation("enabling subscription");
-            this.Subscription.Enable();
+            await this.Subscription.EnableAsync().ConfigureAwait(false);
 
             this.Logger.LogInformation("subscribing to bus");
             this.Bus.Subscribe(this.Subscription);
         }
 
-        public virtual void Disable()
+        public virtual async Task DisableAsync()
         {
             this.Logger.LogInformation("stopping worker");
 
@@ -54,7 +55,7 @@ namespace Bifröst.Playground.Modules
             }
 
             this.Logger.LogInformation("enabling subscription");
-            this.Subscription.Disable();
+            await this.Subscription.DisableAsync().ConfigureAwait(false);
 
             this.Logger.LogInformation("unsubscribing from bus");
             this.Bus.Unsubscribe(this.Subscription);

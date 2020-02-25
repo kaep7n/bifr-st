@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Bifröst.Playground
 {
@@ -13,7 +14,7 @@ namespace Bifröst.Playground
             b.AddConsole();
         });
 
-        static void Main()
+        static async Task Main()
         {
             var logger = loggerFactory.CreateLogger<Program>();
 
@@ -25,11 +26,13 @@ namespace Bifröst.Playground
             logger.LogInformation("building service provider");
             var provider = services.BuildServiceProvider();
 
-            EnableWorkers(logger, provider);
+            await EnableWorkersAsync(logger, provider)
+                .ConfigureAwait(false);
 
             Console.ReadLine();
 
-            DisableWorkers(logger, provider);
+            await DisableWorkersAsync(logger, provider)
+                .ConfigureAwait(false);
         }
 
         private static void ConfigureServices(ServiceCollection services)
@@ -37,7 +40,7 @@ namespace Bifröst.Playground
             services.AddLogging(b =>
             {
                 b.SetMinimumLevel(LogLevel.Trace);
-                //b.AddDebug();
+                b.AddDebug();
                 b.AddConsole();
             });
 
@@ -48,42 +51,48 @@ namespace Bifröst.Playground
             services.AddSingleton<SaveData>();
         }
 
-        private static void DisableWorkers(ILogger<Program> logger, ServiceProvider provider)
+        private static async Task DisableWorkersAsync(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting get data module");
             provider.GetService<GenerateData>()
                 .Disable();
 
             logger.LogInformation("starting transform data module");
-            provider.GetService<TransformData>()
-                .Disable();
+            await provider.GetService<TransformData>()
+                .DisableAsync()
+                .ConfigureAwait(false);
 
             logger.LogInformation("starting save data module");
-            provider.GetService<SaveData>()
-                .Disable();
+            await provider.GetService<SaveData>()
+                .DisableAsync()
+                .ConfigureAwait(false);
 
             logger.LogInformation("stopping bus");
-            provider.GetService<IBus>()
-                .IdleAsync();
+            await provider.GetService<IBus>()
+                .IdleAsync()
+                .ConfigureAwait(false);
         }
 
-        private static void EnableWorkers(ILogger<Program> logger, ServiceProvider provider)
+        private static async Task EnableWorkersAsync(ILogger<Program> logger, ServiceProvider provider)
         {
             logger.LogInformation("starting bus");
-            provider.GetService<IBus>()
-                .RunAsync();
+            await provider.GetService<IBus>()
+                .RunAsync()
+                .ConfigureAwait(false);
 
             logger.LogInformation("starting get data module");
             provider.GetService<GenerateData>()
                 .Enable();
 
             logger.LogInformation("starting transform data module");
-            provider.GetService<TransformData>()
-                .Enable();
+            await provider.GetService<TransformData>()
+                .EnableAsync()
+                .ConfigureAwait(false);
 
             logger.LogInformation("starting save data module");
-            provider.GetService<SaveData>()
-                .Enable();
+            await provider.GetService<SaveData>()
+                .EnableAsync()
+                .ConfigureAwait(false);
         }
     }
 }

@@ -10,7 +10,10 @@ namespace Bifröst.Subscriptions
     {
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly IBus bus;
-        
+
+        private readonly AsyncAutoResetEvent enableEvent = new AsyncAutoResetEvent(false);
+        private readonly AsyncAutoResetEvent disableEvent = new AsyncAutoResetEvent(false);
+
         private CancellationTokenSource tokenSource;
         private bool isDisposing = false;
 
@@ -56,13 +59,16 @@ namespace Bifröst.Subscriptions
             this.receivedEvents++;
         }
 
-        public void Enable()
+        public async Task EnableAsync(CancellationToken cancellationToken = default)
         {
             this.tokenSource = new CancellationTokenSource();
 
             this.bus.Subscribe(this);
 
-            Task.Run(() => this.ProcessInput());
+            _ = Task.Run(() => this.ProcessInput());
+            
+            await this.enableEvent.WaitAsync(TimeSpan.FromMilliseconds(10), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         protected abstract Task ProcessEventAsync(IEvent evt);
@@ -72,6 +78,7 @@ namespace Bifröst.Subscriptions
             try
             {
                 this.IsEnabled = true;
+                this.enableEvent.Set();
 
                 await foreach (var evt in this.incomingChannel.Reader.ReadAllAsync(this.tokenSource.Token))
                 {
@@ -87,10 +94,13 @@ namespace Bifröst.Subscriptions
             }
         }
 
-        public void Disable()
+        public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
             this.bus.Unsubscribe(this);
             this.tokenSource.Cancel();
+
+            await this.disableEvent.WaitAsync(TimeSpan.FromMilliseconds(10), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public void Dispose()

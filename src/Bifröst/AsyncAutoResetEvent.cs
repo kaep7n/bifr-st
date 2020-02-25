@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,10 +8,14 @@ namespace Bifröst
     public class AsyncAutoResetEvent
     {
         private readonly LinkedList<TaskCompletionSource<bool>> waiters = new LinkedList<TaskCompletionSource<bool>>();
+        private readonly bool throwOnCancel;
         private bool isSignaled;
 
-        public AsyncAutoResetEvent(bool signaled)
-            => this.isSignaled = signaled;
+        public AsyncAutoResetEvent(bool signaled, bool throwOnCancel = true)
+        {
+            this.isSignaled = signaled;
+            this.throwOnCancel = throwOnCancel;
+        }
 
         public Task<bool> WaitAsync(TimeSpan timeout)
             => this.WaitAsync(timeout, CancellationToken.None);
@@ -55,9 +58,11 @@ namespace Bifröst
                 {
                     this.waiters.Remove(tcs);
 
-                    if(winner.IsCanceled)
+                    // if the timeout task was cancelled before it timedout 
+                    // we throw an exception if throwOnCancel is true
+                    if(winner.IsCanceled && this.throwOnCancel)
                     {
-                        throw new TaskCanceledException();
+                        throw new TaskCanceledException("waiting for timeout was cancelled");
                     }
 
                     return false;

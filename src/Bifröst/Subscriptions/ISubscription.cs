@@ -12,9 +12,9 @@ namespace Bifröst.Subscriptions
         
         Pattern Pattern { get; }
 
-        void Disable();
-        
-        void Enable();
+        Task EnableAsync(CancellationToken cancellationToken = default);
+
+        Task DisableAsync(CancellationToken cancellationToken = default);
         
         bool Matches(Topic topic);
         

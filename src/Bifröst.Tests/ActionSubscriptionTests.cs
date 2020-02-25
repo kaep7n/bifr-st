@@ -9,6 +9,7 @@ namespace Bifröst.Tests
 {
     public partial class ActionSubscriptionTests
     {
+        private const int WaitTimeout = 50;
 
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
@@ -24,24 +25,22 @@ namespace Bifröst.Tests
         }
 
         [Fact]
-        public void Enable_then_Disable_should_set_isEnabled_accordingly()
+        public async Task Enable_then_Disable_should_set_isEnabled_accordingly()
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
             var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            subscription.Enable();
-            Thread.Sleep(10);
+            await subscription.EnableAsync();
             Assert.True(subscription.IsEnabled);
 
-            subscription.Disable();
-            Thread.Sleep(10);
+            await subscription.DisableAsync();
             Assert.False(subscription.IsEnabled);
         }
 
         [Theory]
         [InlineData(3)]
-        public void Enable_then_Disable_multiple_times_should_set_isEnabled_accordingly(int times)
+        public async Task Enable_then_Disable_multiple_times_should_set_isEnabled_accordingly(int times)
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
@@ -49,28 +48,26 @@ namespace Bifröst.Tests
 
             for (int i = 0; i < times; i++)
             {
-                subscription.Enable();
-                Thread.Sleep(10);
+                await subscription.EnableAsync();
                 Assert.True(subscription.IsEnabled);
 
-                subscription.Disable();
-                Thread.Sleep(10);
+                await subscription.DisableAsync();
                 Assert.False(subscription.IsEnabled);
             }
         }
 
         [Fact]
-        public void Enable_then_Disable_should_subscribe_and_unsubscribe()
+        public async Task Enable_then_Disable_should_subscribe_and_unsubscribe()
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
             var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            subscription.Enable();
+            await subscription.EnableAsync();
 
             Assert.True(bus.IsSubscribed(subscription));
 
-            subscription.Disable();
+            await subscription.DisableAsync();
 
             Assert.False(bus.IsSubscribed(subscription));
         }
@@ -95,7 +92,7 @@ namespace Bifröst.Tests
 
             await subscription.WriteAsync(expectedEvent);
 
-            var wasReset = resetEvent.WaitOne(50);
+            var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.False(wasReset);
         }
 
@@ -113,11 +110,11 @@ namespace Bifröst.Tests
                 return Task.CompletedTask;
             });
             
-            subscription.Enable();
+            await subscription.EnableAsync();
 
             await subscription.WriteAsync(evt);
             
-            var wasReset = resetEvent.WaitOne(50);
+            var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);
         }
 
@@ -129,7 +126,7 @@ namespace Bifröst.Tests
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            subscription.Enable();
+            await subscription.EnableAsync();
 
             await subscription.WriteAsync(evt);
 
@@ -151,11 +148,11 @@ namespace Bifröst.Tests
                 return Task.CompletedTask;
             });
 
-            subscription.Enable();
+            await subscription.EnableAsync();
 
             await subscription.WriteAsync(evt);
 
-            var wasReset = resetEvent.WaitOne(50);
+            var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);
 
             var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.Subscription.ProcessedEvents);
@@ -181,9 +178,9 @@ namespace Bifröst.Tests
             
             await subscription.WriteAsync(expectedEvent);
 
-            subscription.Enable();
+            await subscription.EnableAsync();
 
-            var wasReset = resetEvent.WaitOne(50);
+            var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);
         }
     }
