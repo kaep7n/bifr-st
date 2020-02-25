@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -92,6 +93,6 @@ namespace Bifröst
         }
 
         public override string ToString()
-            => $"Signaled: {this.isSignaled.ToString()}, Waiters: {this.waiters.Count.ToString()}";
+            => $"Signaled: {this.isSignaled.ToString(CultureInfo.InvariantCulture)}, Waiters: {this.waiters.Count.ToString(CultureInfo.InvariantCulture)}";
     }
 }

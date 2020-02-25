@@ -47,7 +47,7 @@ namespace Bifröst.Playground
         private async Task TransformAsync(IEvent evt)
         {
             this.logger.LogDebug($"transform: received evt with topic {evt.Topic}");
-            
+
             var topic = new TopicBuilder("playground")
                          .With("data")
                          .With("ascii")
@@ -64,7 +64,7 @@ namespace Bifröst.Playground
 
             this.logger.LogDebug($"transform: creating ascii event from transformed value {ascii}");
             var asciiEvent = new AsciiEvent(topic, ascii);
-            
+
             this.logger.LogDebug("transform: enqueuing event");
             await this.publisher.WriteAsync(asciiEvent)
                 .ConfigureAwait(false);

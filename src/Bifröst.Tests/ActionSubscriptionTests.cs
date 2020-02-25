@@ -16,7 +16,7 @@ namespace Bifröst.Tests
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+            using var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
             Assert.NotNull(subscription);
             Assert.NotEqual(Guid.Empty, subscription.Id);
@@ -29,12 +29,12 @@ namespace Bifröst.Tests
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+            using var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            await subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
             Assert.True(subscription.IsEnabled);
 
-            await subscription.DisableAsync();
+            await subscription.DisableAsync().ConfigureAwait(false);
             Assert.False(subscription.IsEnabled);
         }
 
@@ -44,14 +44,14 @@ namespace Bifröst.Tests
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+            using var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
             for (int i = 0; i < times; i++)
             {
-                await subscription.EnableAsync();
+                await subscription.EnableAsync().ConfigureAwait(false);
                 Assert.True(subscription.IsEnabled);
 
-                await subscription.DisableAsync();
+                await subscription.DisableAsync().ConfigureAwait(false);
                 Assert.False(subscription.IsEnabled);
             }
         }
@@ -61,13 +61,13 @@ namespace Bifröst.Tests
         {
             var bus = new FakeBus();
             var pattern = new PatternBuilder("root").Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+            using var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            await subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
             Assert.True(bus.IsSubscribed(subscription));
 
-            await subscription.DisableAsync();
+            await subscription.DisableAsync().ConfigureAwait(false);
 
             Assert.False(bus.IsSubscribed(subscription));
         }
@@ -83,74 +83,83 @@ namespace Bifröst.Tests
 
             var expectedEvent = new FakeEvent(topic, "Test");
 
-            var subscription = new AsyncActionSubscription(bus, pattern, evt =>
+            using var subscription = new AsyncActionSubscription(bus, pattern, evt =>
             {
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
             });
 
-            await subscription.WriteAsync(expectedEvent);
+            await subscription.WriteAsync(expectedEvent).ConfigureAwait(false);
 
             var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.False(wasReset);
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_after_Enabled_should_call_registered_action(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             using var resetEvent = new ManualResetEvent(false);
 
             var bus = new FakeBus();
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e =>
+            using var subscription = new AsyncActionSubscription(bus, pattern, e =>
             {
                 resetEvent.Set();
                 return Task.CompletedTask;
             });
-            
-            await subscription.EnableAsync();
 
-            await subscription.WriteAsync(evt);
-            
+            await subscription.EnableAsync().ConfigureAwait(false);
+
+            await subscription.WriteAsync(evt).ConfigureAwait(false);
+
             var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_set_metric_received_events_to_one(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             var bus = new FakeBus();
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
+            using var subscription = new AsyncActionSubscription(bus, pattern, e => Task.CompletedTask);
 
-            await subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
-            await subscription.WriteAsync(evt);
+            await subscription.WriteAsync(evt).ConfigureAwait(false);
 
             var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.Subscription.ReceivedEvents);
             Assert.Equal(1L, metric.Value);
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_set_metric_processed_events_to_one(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             using var resetEvent = new ManualResetEvent(false);
 
             var bus = new FakeBus();
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new AsyncActionSubscription(bus, pattern, e =>
+            using var subscription = new AsyncActionSubscription(bus, pattern, e =>
             {
                 resetEvent.Set();
                 return Task.CompletedTask;
             });
 
-            await subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
-            await subscription.WriteAsync(evt);
+            await subscription.WriteAsync(evt).ConfigureAwait(false);
 
             var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);
@@ -169,16 +178,16 @@ namespace Bifröst.Tests
             var pattern = new PatternBuilder("root").Build();
             var expectedEvent = new FakeEvent(topic, "Test");
 
-            var subscription = new AsyncActionSubscription(bus, pattern, evt =>
+            using var subscription = new AsyncActionSubscription(bus, pattern, evt =>
             {
                 Assert.Equal(expectedEvent, evt);
                 resetEvent.Set();
                 return Task.CompletedTask;
             });
-            
-            await subscription.WriteAsync(expectedEvent);
 
-            await subscription.EnableAsync();
+            await subscription.WriteAsync(expectedEvent).ConfigureAwait(false);
+
+            await subscription.EnableAsync().ConfigureAwait(false);
 
             var wasReset = resetEvent.WaitOne(WaitTimeout);
             Assert.True(wasReset);

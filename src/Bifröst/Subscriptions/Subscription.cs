@@ -66,7 +66,7 @@ namespace Bifröst.Subscriptions
             this.bus.Subscribe(this);
 
             _ = Task.Run(() => this.ProcessInput());
-            
+
             await this.enableEvent.WaitAsync(TimeSpan.FromMilliseconds(10), cancellationToken)
                 .ConfigureAwait(false);
         }

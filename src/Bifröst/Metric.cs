@@ -24,21 +24,21 @@ namespace Bifröst
 
         public DateTimeOffset CreateAt {get;}
 
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
             => obj is Metric metric && this.Equals(metric);
 
-        public bool Equals([AllowNull] Metric other) 
-            => this.Name == other.Name 
-            && EqualityComparer<object>.Default.Equals(this.Value, other.Value) 
+        public bool Equals([AllowNull] Metric other)
+            => this.Name == other.Name
+            && EqualityComparer<object>.Default.Equals(this.Value, other.Value)
             && this.CreateAt.Equals(other.CreateAt);
-        
-        public override int GetHashCode() 
+
+        public override int GetHashCode()
             => HashCode.Combine(this.Name, this.Value, this.CreateAt);
 
-        public static bool operator ==(Metric left, Metric right) 
+        public static bool operator ==(Metric left, Metric right)
             => left.Equals(right);
 
-        public static bool operator !=(Metric left, Metric right) 
+        public static bool operator !=(Metric left, Metric right)
             => !(left == right);
     }
 }

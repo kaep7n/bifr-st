@@ -24,10 +24,10 @@ namespace Bifröst.Tests
         public async Task RunAsync_then_Idle_should_set_IsRunning_accordingly()
         {
             using var bus = new Bus();
-            await bus.RunAsync();
+            await bus.RunAsync().ConfigureAwait(false);
             Assert.True(bus.IsRunning);
 
-            await bus.IdleAsync();
+            await bus.IdleAsync().ConfigureAwait(false);
             Assert.False(bus.IsRunning);
         }
 
@@ -39,10 +39,10 @@ namespace Bifröst.Tests
 
             for (var i = 0; i < times; i++)
             {
-                await bus.RunAsync();
+                await bus.RunAsync().ConfigureAwait(false);
                 Assert.True(bus.IsRunning);
 
-                await bus.IdleAsync();
+                await bus.IdleAsync().ConfigureAwait(false);
                 Assert.False(bus.IsRunning);
             }
         }
@@ -55,37 +55,47 @@ namespace Bifröst.Tests
             var expectedEvent = new FakeEvent(topic, "Test");
 
             using var bus = new Bus();
-            
-            await bus.WriteAsync(expectedEvent);
+
+            await bus.WriteAsync(expectedEvent).ConfigureAwait(false);
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_forward_event_to_registered_subscriber(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.EnableAsync();
+            await subscription.EnableAsync()
+                .ConfigureAwait(false);
 
             using var bus = new Bus();
 
-            await bus.RunAsync();
+            await bus.RunAsync()
+                .ConfigureAwait(false);
+
             bus.Subscribe(subscription);
 
-            await bus.WriteAsync(evt);
+            await bus.WriteAsync(evt)
+                .ConfigureAwait(false);
+
             subscription.ContinueWrite();
-            await subscription.WaitUntilWrite(this.waitTimeout);
+
+            await subscription.WaitUntilWrite(this.waitTimeout)
+                .ConfigureAwait(false);
 
             Assert.Collection(subscription.ReceivedEvents, e => Assert.Equal(evt, e));
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_set_metric_received_events_to_one(IEvent evt)
         {
             using var bus = new Bus();
-            
-            await bus.WriteAsync(evt);
+
+            await bus.WriteAsync(evt).ConfigureAwait(false);
 
             var metrics = bus.GetMetrics();
 
@@ -94,16 +104,21 @@ namespace Bifröst.Tests
         }
 
         [Theory]
-        [ClassData(typeof(MultipleEventsData))]
+        [ClassData(typeof(MultipleEventsDataCollection))]
         public async Task WriteAsync_should_set_metric_received_events_to_input_event_count(Topic topic, IEnumerable<IEvent> events)
         {
+            if (topic is null)
+                throw new ArgumentNullException(nameof(topic));
+            if (events is null)
+                throw new ArgumentNullException(nameof(events));
+
             using var bus = new Bus();
 
             foreach (var evt in events)
             {
-                await bus.WriteAsync(evt);
+                await bus.WriteAsync(evt).ConfigureAwait(false);
             }
-            
+
             var metrics = bus.GetMetrics();
 
             var metric = Assert.Single(metrics, m => m.Name == Metrics.Bus.ReceivedEvents);
@@ -111,21 +126,24 @@ namespace Bifröst.Tests
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_increment_processed_event_count_to_one(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
 
-            await bus.RunAsync();
+            await bus.RunAsync().ConfigureAwait(false);
             bus.Subscribe(subscription);
 
-            await bus.WriteAsync(evt);
+            await bus.WriteAsync(evt).ConfigureAwait(false);
             subscription.ContinueWrite();
-            await subscription.WaitUntilWrite(this.waitTimeout);
+            await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
 
             var metrics = bus.GetMetrics();
 
@@ -134,22 +152,27 @@ namespace Bifröst.Tests
         }
 
         [Theory]
-        [ClassData(typeof(MultipleEventsData))]
+        [ClassData(typeof(MultipleEventsDataCollection))]
         public async Task WriteAsync_should_increment_processed_event_count_to_input_event_count(Topic topic, IEnumerable<IEvent> events)
         {
+            if (topic is null)
+                throw new ArgumentNullException(nameof(topic));
+            if (events is null)
+                throw new ArgumentNullException(nameof(events));
+
             var pattern = new PatternBuilder().FromTopic(topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
 
             using var bus = new Bus();
 
-            await bus.RunAsync();
+            await bus.RunAsync().ConfigureAwait(false);
             bus.Subscribe(subscription);
 
             foreach (var evt in events)
             {
-                await bus.WriteAsync(evt);
+                await bus.WriteAsync(evt).ConfigureAwait(false);
                 subscription.ContinueWrite();
-                await subscription.WaitUntilWrite(this.waitTimeout);
+                await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
             var metrics = bus.GetMetrics();
@@ -159,81 +182,94 @@ namespace Bifröst.Tests
         }
 
         [Theory]
-        [ClassData(typeof(MultipleEventsData))]
+        [ClassData(typeof(MultipleEventsDataCollection))]
         public async Task WriteAsync_should_forward_multiple_events_to_registered_subscriber(Topic topic, IEnumerable<IEvent> events)
         {
+            if (topic is null)
+                throw new ArgumentNullException(nameof(topic));
+            if (events is null)
+                throw new ArgumentNullException(nameof(events));
+
             var pattern = new PatternBuilder().FromTopic(topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
 
             using var bus = new Bus();
-           
-            await bus.RunAsync();
+
+            await bus.RunAsync().ConfigureAwait(false);
             bus.Subscribe(subscription);
-            
+
             subscription.ContinueWrite();
 
             foreach (var evt in events)
             {
-                await bus.WriteAsync(evt);
+                await bus.WriteAsync(evt).ConfigureAwait(false);
                 subscription.ContinueWrite();
-                await subscription.WaitUntilWrite(this.waitTimeout);
+                await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
             Assert.All(events, e => Assert.Contains(subscription.ReceivedEvents, r => r.Id == e.Id));
         }
 
         [Theory]
-        [ClassData(typeof(SingleEventData))]
+        [ClassData(typeof(SingleEventDataCollection))]
         public async Task WriteAsync_should_forward_event_to_subscribers_if_first_subscriber_is_blocking(IEvent evt)
         {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
 
             var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
-            blockingSubscription.EnableAsync();
+            await blockingSubscription.EnableAsync().ConfigureAwait(false);
 
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
 
-            await bus.RunAsync();
+            await bus.RunAsync().ConfigureAwait(false);
 
             bus.Subscribe(blockingSubscription);
             bus.Subscribe(subscription);
 
-            await bus.WriteAsync(evt);
+            await bus.WriteAsync(evt).ConfigureAwait(false);
             subscription.ContinueWrite();
 
-            await subscription.WaitUntilWrite(this.waitTimeout);
+            await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
 
             Assert.Single(subscription.ReceivedEvents, evt);
             Assert.Empty(blockingSubscription.ReceivedEvents);
         }
 
         [Theory]
-        [ClassData(typeof(MultipleEventsData))]
+        [ClassData(typeof(MultipleEventsDataCollection))]
         public async Task WriteAsync_should_forward_multiple_events_to_subscribers_if_first_subscriber_is_blocking(Topic topic, IEnumerable<IEvent> events)
         {
+            if (topic is null)
+                throw new ArgumentNullException(nameof(topic));
+            if (events is null)
+                throw new ArgumentNullException(nameof(events));
+
             var pattern = new PatternBuilder().FromTopic(topic).Build();
 
             var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
-            blockingSubscription.EnableAsync();
+            await blockingSubscription.EnableAsync().ConfigureAwait(false);
 
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.EnableAsync();
+            await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
 
-            await bus.RunAsync();
+            await bus.RunAsync().ConfigureAwait(false);
 
             bus.Subscribe(blockingSubscription);
             bus.Subscribe(subscription);
 
             foreach (var evt in events)
             {
-                await bus.WriteAsync(evt);
+                await bus.WriteAsync(evt).ConfigureAwait(false);
                 subscription.ContinueWrite();
-                await subscription.WaitUntilWrite(this.waitTimeout);
+                await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
             Assert.All(events, e => Assert.Contains(subscription.ReceivedEvents, r => r.Id == e.Id));

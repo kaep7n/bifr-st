@@ -18,7 +18,7 @@ namespace Bifröst
         public TopicBuilder With(string fragment)
         {
             PathValidator.ValidateAndThrow(fragment);
-            
+
             this.fragments.Add(fragment);
 
             return this;

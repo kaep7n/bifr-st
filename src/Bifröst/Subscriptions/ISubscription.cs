@@ -9,15 +9,15 @@ namespace Bifröst.Subscriptions
         Guid Id { get; }
 
         bool IsEnabled { get; }
-        
+
         Pattern Pattern { get; }
 
         Task EnableAsync(CancellationToken cancellationToken = default);
 
         Task DisableAsync(CancellationToken cancellationToken = default);
-        
+
         bool Matches(Topic topic);
-        
+
         Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default);
     }
 }

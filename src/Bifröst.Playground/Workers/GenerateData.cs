@@ -40,7 +40,7 @@ namespace Bifröst.Playground
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             this.logger.LogDebug("get: data generation event elapsed");
-            
+
             var topic = new TopicBuilder("playground")
                 .With("data")
                 .With("rng")

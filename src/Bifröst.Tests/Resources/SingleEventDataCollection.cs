@@ -2,9 +2,9 @@
 
 namespace Bifröst.Tests.Resources
 {
-    public class SingleEventData : TheoryData<IEvent>
+    public class SingleEventDataCollection : TheoryData<IEvent>
     {
-        public SingleEventData()
+        public SingleEventDataCollection()
         {
             var topic = new TopicBuilder("test").Build();
             this.Add(new FakeEvent(topic, "Test"));
