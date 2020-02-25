@@ -21,6 +21,8 @@ namespace Bifröst
         private readonly Channel<IEvent> incomingChannel = Channel.CreateUnbounded<IEvent>();
         private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
+        private readonly Dictionary<Guid, IList<IEvent>> failedEvents = new Dictionary<Guid, IList<IEvent>>();
+
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private bool isDisposing = false;
 
@@ -96,6 +98,14 @@ namespace Bifröst
                         }
                         catch (TaskCanceledException)
                         {
+                            if(this.failedEvents.ContainsKey(subscriber.Id))
+                            {
+                                this.failedEvents.Add(subscriber.Id, new List<IEvent>{ evt });
+                            }
+                            else
+                            {
+                                this.failedEvents[subscriber.Id].Add(evt);
+                            }
                         }
                     }
 
