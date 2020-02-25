@@ -48,15 +48,15 @@ namespace Bifröst.Tests.Resources
         public bool Matches(Topic topic)
             => this.Pattern.Matches(topic);
 
-        public Task<bool> WaitUntilWrite(TimeSpan timeout) 
+        public Task<bool> WaitUntilWrite(TimeSpan timeout)
             => this.waitUntilWrite.WaitAsync(timeout);
 
-        public void ContinueWrite() 
+        public void ContinueWrite()
             => this.waitBeforeWrite.Set();
 
         public async Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default)
         {
-            await this.waitBeforeWrite.WaitAsync(this.waitBeforeWriteTimeout, cancellationToken);
+            await this.waitBeforeWrite.WaitAsync(this.waitBeforeWriteTimeout, cancellationToken).ConfigureAwait(false);
             this.receivedEvents.Add(evt);
             this.waitUntilWrite.Set();
         }

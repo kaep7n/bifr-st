@@ -3,9 +3,9 @@ using Xunit;
 
 namespace Bifröst.Tests.Resources
 {
-    public class MultipleEventsData : TheoryData<Topic, IEnumerable<IEvent>>
+    public class MultipleEventsDataCollection : TheoryData<Topic, IEnumerable<IEvent>>
     {
-        public MultipleEventsData()
+        public MultipleEventsDataCollection()
         {
             var topic = new TopicBuilder("test").Build();
 

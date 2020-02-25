@@ -19,7 +19,7 @@ namespace Bifröst.Playground.Events
         public Guid Id { get; }
 
         public Topic Topic { get; }
-        
+
         public char Ascii { get; }
     }
 }

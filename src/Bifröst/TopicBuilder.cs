@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Bifröst
 {
@@ -18,7 +16,7 @@ namespace Bifröst
         public TopicBuilder With(string fragment)
         {
             PathValidator.ValidateAndThrow(fragment);
-            
+
             this.fragments.Add(fragment);
 
             return this;

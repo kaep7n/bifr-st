@@ -11,12 +11,6 @@ namespace Bifröst.Tests.Resources
 
         public bool IsRunning { get; private set; }
 
-        public long WaitingEventCount => 0;
-
-        public long ProcessedEventCount => 0;
-
-        public long FailedEventCount => 0;
-
         public Task WriteAsync(IEvent evt)
         {
             this.enqueuedEvents.Add(evt);
