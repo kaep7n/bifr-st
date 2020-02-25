@@ -65,7 +65,7 @@ namespace Bifröst.Tests
         {
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.Enable();
+            subscription.EnableAsync();
 
             using var bus = new Bus();
 
@@ -116,7 +116,7 @@ namespace Bifröst.Tests
         {
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.Enable();
+            subscription.EnableAsync();
 
             using var bus = new Bus();
 
@@ -189,10 +189,10 @@ namespace Bifröst.Tests
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
 
             var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
-            blockingSubscription.Enable();
+            blockingSubscription.EnableAsync();
 
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.Enable();
+            subscription.EnableAsync();
 
             using var bus = new Bus();
 
@@ -217,10 +217,10 @@ namespace Bifröst.Tests
             var pattern = new PatternBuilder().FromTopic(topic).Build();
 
             var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
-            blockingSubscription.Enable();
+            blockingSubscription.EnableAsync();
 
             var subscription = new FakeSubscription(pattern, this.waitTimeout);
-            subscription.Enable();
+            subscription.EnableAsync();
 
             using var bus = new Bus();
 

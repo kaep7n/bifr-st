@@ -33,11 +33,17 @@ namespace Bifröst.Tests.Resources
 
         public IEnumerable<IEvent> ReceivedEvents => this.receivedEvents;
 
-        public void Disable()
-            => this.IsEnabled = false;
+        public Task EnableAsync(CancellationToken cancellationToken = default)
+        {
+            this.IsEnabled = true;
+            return Task.CompletedTask;
+        }
 
-        public void Enable()
-            => this.IsEnabled = true;
+        public Task DisableAsync(CancellationToken cancellationToken = default)
+        {
+            this.IsEnabled = false;
+            return Task.CompletedTask;
+        }
 
         public bool Matches(Topic topic)
             => this.Pattern.Matches(topic);

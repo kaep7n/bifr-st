@@ -40,9 +40,9 @@ namespace Bifröst.Playground
             this.logger = logger;
         }
 
-        public void Enable() => this.subscription.Enable();
+        public Task EnableAsync() => this.subscription.EnableAsync();
 
-        public void Disable() => this.subscription.Disable();
+        public Task DisableAsync() => this.subscription.DisableAsync();
 
         private async Task TransformAsync(IEvent evt)
         {
