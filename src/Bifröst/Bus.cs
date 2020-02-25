@@ -11,6 +11,7 @@ namespace Bifröst
 
     public sealed class Bus : IBus, IMetrics, IDisposable
     {
+        private readonly TimeSpan cancellationTimeout = TimeSpan.FromMilliseconds(10);
         private readonly AsyncAutoResetEvent runEvent = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent idleEvent = new AsyncAutoResetEvent(false);
 
@@ -86,8 +87,7 @@ namespace Bifröst
 
                     foreach (var subscriber in matchedSubscriptions)
                     {
-                        using var cancellationTokenSource = new CancellationTokenSource();
-                        cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(10));
+                        using var cancellationTokenSource = new CancellationTokenSource(this.cancellationTimeout);
 
                         try
                         {
