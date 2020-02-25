@@ -9,7 +9,7 @@ namespace Bifröst.Tests
 {
     public partial class ActionSubscriptionTests
     {
-        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(100);
+        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(200);
 
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
