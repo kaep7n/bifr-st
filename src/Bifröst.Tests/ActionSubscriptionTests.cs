@@ -9,7 +9,7 @@ namespace Bifröst.Tests
 {
     public partial class ActionSubscriptionTests
     {
-        private const int WaitTimeout = 50;
+        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(100);
 
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
@@ -92,7 +92,7 @@ namespace Bifröst.Tests
 
             await subscription.WriteAsync(expectedEvent).ConfigureAwait(false);
 
-            var wasReset = resetEvent.WaitOne(WaitTimeout);
+            var wasReset = resetEvent.WaitOne(this.waitTimeout);
             Assert.False(wasReset);
         }
 
@@ -117,7 +117,7 @@ namespace Bifröst.Tests
 
             await subscription.WriteAsync(evt).ConfigureAwait(false);
 
-            var wasReset = resetEvent.WaitOne(WaitTimeout);
+            var wasReset = resetEvent.WaitOne(this.waitTimeout);
             Assert.True(wasReset);
         }
 
@@ -161,7 +161,7 @@ namespace Bifröst.Tests
 
             await subscription.WriteAsync(evt).ConfigureAwait(false);
 
-            var wasReset = resetEvent.WaitOne(WaitTimeout);
+            var wasReset = resetEvent.WaitOne(this.waitTimeout);
             Assert.True(wasReset);
 
             var metric = Assert.Single(subscription.GetMetrics(), m => m.Name == Metrics.Subscription.ProcessedEvents);
@@ -189,7 +189,7 @@ namespace Bifröst.Tests
 
             await subscription.EnableAsync().ConfigureAwait(false);
 
-            var wasReset = resetEvent.WaitOne(WaitTimeout);
+            var wasReset = resetEvent.WaitOne(this.waitTimeout);
             Assert.True(wasReset);
         }
     }
