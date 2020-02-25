@@ -115,7 +115,7 @@ namespace Bifröst.Subscriptions
             {
                 if (disposing)
                 {
-                    this.tokenSource.Dispose();
+                    this.tokenSource?.Dispose();
                 }
 
                 this.isDisposing = true;
