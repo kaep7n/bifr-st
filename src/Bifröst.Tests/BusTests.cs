@@ -8,9 +8,9 @@ using Xunit;
 
 namespace Bifröst.Tests
 {
-    public partial class BusTests
+    public class BusTests
     {
-        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(200);
+        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(1000);
 
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
