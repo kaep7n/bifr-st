@@ -12,7 +12,7 @@ namespace Bifröst
     public sealed class Bus : IBus, IMetrics, IDisposable
     {
         private readonly TimeSpan cancellationTimeout = TimeSpan.FromMilliseconds(10);
-        private readonly TimeSpan retrySleepTime = TimeSpan.FromMilliseconds(100);
+        private readonly TimeSpan retrySleepTime = TimeSpan.FromMilliseconds(10);
         private readonly AsyncAutoResetEvent runEvent = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent retryEvent = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent idleEvent = new AsyncAutoResetEvent(false);
@@ -65,10 +65,10 @@ namespace Bifröst
             _ = Task.Run(() => this.ProcessAsync(this.tokenSource.Token));
             _ = Task.Run(() => this.ProcessFailedEventsAsync(this.tokenSource.Token));
 
-            await this.runEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+            await this.runEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
                 .ConfigureAwait(false);
 
-            await this.retryEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+            await this.retryEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
                 .ConfigureAwait(false);
         }
 
@@ -76,7 +76,7 @@ namespace Bifröst
         {
             this.tokenSource.Cancel();
 
-            await this.idleEvent.WaitAsync(TimeSpan.FromMilliseconds(10))
+            await this.idleEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
                 .ConfigureAwait(false);
         }
 
@@ -104,7 +104,7 @@ namespace Bifröst
                         }
                         catch (TaskCanceledException)
                         {
-                            if(this.failedEvents.ContainsKey(subscriber.Id))
+                            if(!this.failedEvents.ContainsKey(subscriber.Id))
                             {
                                 this.failedEvents.Add(subscriber.Id, new List<IEvent>{ evt });
                             }
