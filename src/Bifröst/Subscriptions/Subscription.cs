@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
@@ -65,10 +66,22 @@ namespace Bifröst.Subscriptions
 
             this.bus.Subscribe(this);
 
+            var waitForEnabledTask = this.enableEvent.WaitAsync(cancellationToken);
+
             _ = Task.Run(() => this.ProcessInput());
 
-            await this.enableEvent.WaitAsync(TimeSpan.FromMilliseconds(100), cancellationToken)
-                .ConfigureAwait(false);
+            await waitForEnabledTask.ConfigureAwait(false);
+        }
+
+        public async Task DisableAsync(CancellationToken cancellationToken = default)
+        {
+            this.bus.Unsubscribe(this);
+
+            var waitForDisabledTask = this.disableEvent.WaitAsync(cancellationToken);
+
+            this.tokenSource.Cancel();
+
+            await waitForDisabledTask.ConfigureAwait(false);
         }
 
         protected abstract Task ProcessEventAsync(IEvent evt);
@@ -90,17 +103,9 @@ namespace Bifröst.Subscriptions
             }
             finally
             {
+                this.disableEvent.Set();
                 this.IsEnabled = false;
             }
-        }
-
-        public async Task DisableAsync(CancellationToken cancellationToken = default)
-        {
-            this.bus.Unsubscribe(this);
-            this.tokenSource.Cancel();
-
-            await this.disableEvent.WaitAsync(TimeSpan.FromMilliseconds(100), cancellationToken)
-                .ConfigureAwait(false);
         }
 
         public void Dispose()

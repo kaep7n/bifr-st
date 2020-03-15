@@ -10,7 +10,7 @@ namespace Bifröst.Tests
 {
     public class BusTests
     {
-        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(1000);
+        private readonly TimeSpan waitTimeout = TimeSpan.FromMilliseconds(10000);
 
         [Fact]
         public void Ctor_should_create_instance_with_default_settings()
@@ -67,7 +67,7 @@ namespace Bifröst.Tests
                 throw new ArgumentNullException(nameof(evt));
 
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
             await subscription.EnableAsync()
                 .ConfigureAwait(false);
 
@@ -80,8 +80,6 @@ namespace Bifröst.Tests
 
             await bus.WriteAsync(evt)
                 .ConfigureAwait(false);
-
-            subscription.ContinueWrite();
 
             await subscription.WaitUntilWrite(this.waitTimeout)
                 .ConfigureAwait(false);
@@ -133,7 +131,7 @@ namespace Bifröst.Tests
                 throw new ArgumentNullException(nameof(evt));
 
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
             await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
@@ -142,7 +140,6 @@ namespace Bifröst.Tests
             bus.Subscribe(subscription);
 
             await bus.WriteAsync(evt).ConfigureAwait(false);
-            subscription.ContinueWrite();
             await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
 
             var metrics = bus.GetMetrics();
@@ -161,7 +158,7 @@ namespace Bifröst.Tests
                 throw new ArgumentNullException(nameof(events));
 
             var pattern = new PatternBuilder().FromTopic(topic).Build();
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
 
             using var bus = new Bus();
 
@@ -171,7 +168,6 @@ namespace Bifröst.Tests
             foreach (var evt in events)
             {
                 await bus.WriteAsync(evt).ConfigureAwait(false);
-                subscription.ContinueWrite();
                 await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
@@ -191,19 +187,16 @@ namespace Bifröst.Tests
                 throw new ArgumentNullException(nameof(events));
 
             var pattern = new PatternBuilder().FromTopic(topic).Build();
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
 
             using var bus = new Bus();
 
             await bus.RunAsync().ConfigureAwait(false);
             bus.Subscribe(subscription);
 
-            subscription.ContinueWrite();
-
             foreach (var evt in events)
             {
                 await bus.WriteAsync(evt).ConfigureAwait(false);
-                subscription.ContinueWrite();
                 await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
@@ -219,10 +212,10 @@ namespace Bifröst.Tests
 
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
 
-            var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
+            var blockingSubscription = new FakeSubscription(pattern, block: true);
             await blockingSubscription.EnableAsync().ConfigureAwait(false);
 
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
             await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
@@ -233,7 +226,6 @@ namespace Bifröst.Tests
             bus.Subscribe(subscription);
 
             await bus.WriteAsync(evt).ConfigureAwait(false);
-            subscription.ContinueWrite();
 
             await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
 
@@ -252,10 +244,10 @@ namespace Bifröst.Tests
 
             var pattern = new PatternBuilder().FromTopic(topic).Build();
 
-            var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
+            var blockingSubscription = new FakeSubscription(pattern, block: true);
             await blockingSubscription.EnableAsync().ConfigureAwait(false);
 
-            var subscription = new FakeSubscription(pattern, this.waitTimeout);
+            var subscription = new FakeSubscription(pattern);
             await subscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
@@ -268,7 +260,6 @@ namespace Bifröst.Tests
             foreach (var evt in events)
             {
                 await bus.WriteAsync(evt).ConfigureAwait(false);
-                subscription.ContinueWrite();
                 await subscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
             }
 
@@ -285,7 +276,7 @@ namespace Bifröst.Tests
 
             var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
 
-            var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
+            var blockingSubscription = new FakeSubscription(pattern, block: true);
             await blockingSubscription.EnableAsync().ConfigureAwait(false);
 
             using var bus = new Bus();
@@ -298,7 +289,8 @@ namespace Bifröst.Tests
 
             // wait for internal cancellation
             Thread.Sleep(100);
-            blockingSubscription.ContinueWrite();
+
+            blockingSubscription.UnBlockWrite();
 
             await blockingSubscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
 
