@@ -17,9 +17,6 @@ namespace Bifröst.Subscriptions
             this.bus = bus;
         }
 
-        public AsyncActionSubscription Create(Pattern pattern, Func<IEvent, Task> func)
-        {
-            return new AsyncActionSubscription(this.bus, pattern, func);
-        }
+        public AsyncActionSubscription Create(Pattern pattern, Func<IEvent, Task> func) => new AsyncActionSubscription(this.bus, pattern, func);
     }
 }

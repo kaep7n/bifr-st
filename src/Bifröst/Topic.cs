@@ -11,30 +11,15 @@ namespace Bifröst
 
         public string Path { get; }
 
-        public object Clone()
-        {
-            return new Topic((string)this.Path.Clone());
-        }
+        public object Clone() => new Topic((string)this.Path.Clone());
 
-        public override bool Equals(object obj)
-        {
-            return this.Equals(obj as Topic);
-        }
+        public override bool Equals(object obj) => this.Equals(obj as Topic);
 
-        public bool Equals(Topic other)
-        {
-            return other != null &&
+        public bool Equals(Topic other) => other != null &&
                    this.Path == other.Path;
-        }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(this.Path);
-        }
+        public override int GetHashCode() => HashCode.Combine(this.Path);
 
-        public override string ToString()
-        {
-            return this.Path;
-        }
+        public override string ToString() => this.Path;
     }
 }

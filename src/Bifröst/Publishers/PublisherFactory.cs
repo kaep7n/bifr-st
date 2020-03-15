@@ -16,9 +16,6 @@ namespace Bifröst.Publishers
             this.bus = bus;
         }
 
-        public IPublisher Create()
-        {
-            return new Publisher(this.bus);
-        }
+        public IPublisher Create() => new Publisher(this.bus);
     }
 }

@@ -29,19 +29,10 @@ namespace Bifröst.Tests.Resources
             return Task.CompletedTask;
         }
 
-        public void Subscribe(ISubscription subscription)
-        {
-            this.subscriptions.Add(subscription);
-        }
+        public void Subscribe(ISubscription subscription) => this.subscriptions.Add(subscription);
 
-        public void Unsubscribe(ISubscription subscription)
-        {
-            this.subscriptions.Remove(subscription);
-        }
+        public void Unsubscribe(ISubscription subscription) => this.subscriptions.Remove(subscription);
 
-        public bool IsSubscribed(ISubscription subscription)
-        {
-            return this.subscriptions.Contains(subscription);
-        }
+        public bool IsSubscribed(ISubscription subscription) => this.subscriptions.Contains(subscription);
     }
 }

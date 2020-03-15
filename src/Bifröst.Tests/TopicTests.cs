@@ -48,18 +48,12 @@ namespace Bifröst.Tests
         [InlineData("root/worker")] // slash
         [InlineData("root  ")] // whitespace
         [InlineData("   ")] // tab
-        public void Builder_should_throw_ArgumentException_when_root_contains_invalid_characters_or_slash(string fragment)
-        {
-            Assert.Throws<ArgumentException>(() => new TopicBuilder(fragment));
-        }
+        public void Builder_should_throw_ArgumentException_when_root_contains_invalid_characters_or_slash(string fragment) => Assert.Throws<ArgumentException>(() => new TopicBuilder(fragment));
 
         [Theory]
         [InlineData("root/worker")] // slash
         [InlineData("root  ")] // whitespace
         [InlineData("   ")] // tab
-        public void Builder_should_throw_ArgumentException_when_fragment_contains_invalid_characters_or_slash(string fragment)
-        {
-            Assert.Throws<ArgumentException>(() => new TopicBuilder("root").With(fragment));
-        }
+        public void Builder_should_throw_ArgumentException_when_fragment_contains_invalid_characters_or_slash(string fragment) => Assert.Throws<ArgumentException>(() => new TopicBuilder("root").With(fragment));
     }
 }
