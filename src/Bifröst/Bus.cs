@@ -1,4 +1,5 @@
 ﻿using Bifröst.Subscriptions;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,26 +59,27 @@ namespace Bifröst
             this.receivedEventsCount++;
         }
 
-        public async Task RunAsync()
+        public async Task RunAsync(CancellationToken cancellationToken = default)
         {
             this.tokenSource = new CancellationTokenSource();
+
+            var waitForRunTask = this.runEvent.WaitAsync(cancellationToken);
+            var waitForRetryTask = this.retryEvent.WaitAsync(cancellationToken);
 
             _ = Task.Run(() => this.ProcessAsync(this.tokenSource.Token));
             _ = Task.Run(() => this.ProcessFailedEventsAsync(this.tokenSource.Token));
 
-            await this.runEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
-                .ConfigureAwait(false);
-
-            await this.retryEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
+            await Task.WhenAll(waitForRunTask, waitForRetryTask)
                 .ConfigureAwait(false);
         }
 
-        public async Task IdleAsync()
+        public async Task IdleAsync(CancellationToken cancellationToken = default)
         {
+            var waitForIdleTask = this.idleEvent.WaitAsync(cancellationToken);
+
             this.tokenSource.Cancel();
 
-            await this.idleEvent.WaitAsync(TimeSpan.FromMilliseconds(100))
-                .ConfigureAwait(false);
+            await waitForIdleTask.ConfigureAwait(false);
         }
 
         private async Task ProcessAsync(CancellationToken cancellationToken)

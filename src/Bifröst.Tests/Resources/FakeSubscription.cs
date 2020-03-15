@@ -1,4 +1,5 @@
 ﻿using Bifröst.Subscriptions;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,12 +9,12 @@ namespace Bifröst.Tests.Resources
 {
     public class FakeSubscription : ISubscription
     {
-        private readonly AsyncAutoResetEvent waitBeforeWrite = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent waitUntilWrite = new AsyncAutoResetEvent(false);
         private readonly List<IEvent> receivedEvents = new List<IEvent>();
-        private readonly TimeSpan waitBeforeWriteTimeout;
+        
+        private bool block;
 
-        public FakeSubscription(Pattern pattern, TimeSpan waitBeforeWriteTimeout)
+        public FakeSubscription(Pattern pattern, bool block = false)
         {
             if (pattern is null)
             {
@@ -22,7 +23,7 @@ namespace Bifröst.Tests.Resources
 
             this.Id = Guid.NewGuid();
             this.Pattern = pattern;
-            this.waitBeforeWriteTimeout = waitBeforeWriteTimeout;
+            this.block = block;
         }
 
         public Guid Id { get; }
@@ -48,15 +49,39 @@ namespace Bifröst.Tests.Resources
         public bool Matches(Topic topic)
             => this.Pattern.Matches(topic);
 
-        public Task<bool> WaitUntilWrite(TimeSpan timeout)
-            => this.waitUntilWrite.WaitAsync(timeout);
+        public async Task<bool> WaitUntilWrite(TimeSpan timeout)
+        {
+            using var cancellationTokenSource = new CancellationTokenSource(timeout);
 
-        public void ContinueWrite()
-            => this.waitBeforeWrite.Set();
+            try
+            {
+                await this.waitUntilWrite.WaitAsync(cancellationTokenSource.Token)
+                    .ConfigureAwait(false);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+
+        public void BlockWrite()
+        {
+            this.block = true;
+        }
+
+        public void UnBlockWrite()
+        {
+            this.block = false;
+        }
 
         public async Task WriteAsync(IEvent evt, CancellationToken cancellationToken = default)
         {
-            await this.waitBeforeWrite.WaitAsync(this.waitBeforeWriteTimeout, cancellationToken).ConfigureAwait(false);
+            if (this.block)
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+            }
+
             this.receivedEvents.Add(evt);
             this.waitUntilWrite.Set();
         }

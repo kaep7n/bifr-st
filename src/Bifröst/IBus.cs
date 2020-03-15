@@ -1,4 +1,5 @@
 ﻿using Bifröst.Subscriptions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Bifröst
@@ -7,9 +8,9 @@ namespace Bifröst
     {
         bool IsRunning { get; }
 
-        Task RunAsync();
+        Task RunAsync(CancellationToken cancellationToken = default);
 
-        Task IdleAsync();
+        Task IdleAsync(CancellationToken cancellationToken = default);
 
         void Subscribe(ISubscription subscription);
 

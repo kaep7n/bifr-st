@@ -1,13 +1,14 @@
 ﻿using Bifröst.Subscriptions;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Bifröst.Tests.Resources
 {
     public class FakeBus : IBus
     {
-        private List<IEvent> enqueuedEvents = new List<IEvent>();
-        private List<ISubscription> subscriptions = new List<ISubscription>();
+        private readonly List<IEvent> enqueuedEvents = new List<IEvent>();
+        private readonly List<ISubscription> subscriptions = new List<ISubscription>();
 
         public bool IsRunning { get; private set; }
 
@@ -17,13 +18,13 @@ namespace Bifröst.Tests.Resources
             return Task.CompletedTask;
         }
 
-        public Task IdleAsync()
+        public Task IdleAsync(CancellationToken cancellationToken = default)
         {
             this.IsRunning = false;
             return Task.CompletedTask;
         }
 
-        public Task RunAsync()
+        public Task RunAsync(CancellationToken cancellationToken = default)
         {
             this.IsRunning = true;
             return Task.CompletedTask;
