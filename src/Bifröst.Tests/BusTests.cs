@@ -275,5 +275,34 @@ namespace Bifröst.Tests
             Assert.All(events, e => Assert.Contains(subscription.ReceivedEvents, r => r.Id == e.Id));
             Assert.Empty(blockingSubscription.ReceivedEvents);
         }
+
+        [Theory]
+        [ClassData(typeof(SingleEventDataCollection))]
+        public async Task WriteAsync_should_retry_failed_event(IEvent evt)
+        {
+            if (evt is null)
+                throw new ArgumentNullException(nameof(evt));
+
+            var pattern = new PatternBuilder().FromTopic(evt.Topic).Build();
+
+            var blockingSubscription = new FakeSubscription(pattern, Timeout.InfiniteTimeSpan);
+            await blockingSubscription.EnableAsync().ConfigureAwait(false);
+
+            using var bus = new Bus();
+
+            await bus.RunAsync().ConfigureAwait(false);
+
+            bus.Subscribe(blockingSubscription);
+
+            await bus.WriteAsync(evt).ConfigureAwait(false);
+
+            // wait for internal cancellation
+            Thread.Sleep(100);
+            blockingSubscription.ContinueWrite();
+
+            await blockingSubscription.WaitUntilWrite(this.waitTimeout).ConfigureAwait(false);
+
+            Assert.Single(blockingSubscription.ReceivedEvents, evt);
+        }
     }
 }

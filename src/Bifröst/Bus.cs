@@ -134,23 +134,35 @@ namespace Bifröst
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (this.failedEvents.Count == 0)
-                    Thread.Sleep(this.retrySleepTime);
-
-                foreach (var failedEvent in this.failedEvents.ToArray())
                 {
-                    var subscription = this.subscriptions.FirstOrDefault(s => s.Id == failedEvent.Key);
+                    Thread.Sleep(this.retrySleepTime);
+                    continue;
+                }
 
-                    if(subscription == null)
-                        this.failedEvents.Remove(failedEvent.Key);
+                foreach (var failedSubscribtion in this.failedEvents.ToArray())
+                {
+                    var subscription = this.subscriptions.FirstOrDefault(s => s.Id == failedSubscribtion.Key);
 
-                    foreach (var evt in failedEvent.Value.ToArray())
+                    if (subscription == null)
+                    {
+                        this.failedEvents.Remove(failedSubscribtion.Key);
+                        continue;
+                    }
+
+                    if (failedSubscribtion.Value.Count == 0)
+                    {
+                        this.failedEvents.Remove(failedSubscribtion.Key);
+                        continue;
+                    }
+
+                    foreach (var evt in failedSubscribtion.Value.ToArray())
                     {
                         try
                         {
                             await subscription.WriteAsync(evt, cancellationTokenSource.Token)
                                 .ConfigureAwait(false);
 
-                            failedEvent.Value.Remove(evt);
+                            failedSubscribtion.Value.Remove(evt);
                         }
                         catch (TaskCanceledException)
                         {
