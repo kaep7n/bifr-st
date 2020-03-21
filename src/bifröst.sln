@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8B22A8AF-AECD-45A9-B9DA-79E71AF6354D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".style", ".style", "{8B22A8AF-AECD-45A9-B9DA-79E71AF6354D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
