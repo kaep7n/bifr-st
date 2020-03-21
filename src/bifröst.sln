@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bifröst.Tests", "Bifröst.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bifröst.Playground", "Bifröst.Playground\Bifröst.Playground.csproj", "{3A260F27-F53B-4B58-92FC-39A35BD28AC7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{4427E6DF-EAC5-4D40-864D-1CF76B227B14}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".ci", ".ci", "{4427E6DF-EAC5-4D40-864D-1CF76B227B14}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{D6D175DC-00B2-483D-85E7-9E65F4A0A840}"
 EndProject
@@ -22,6 +22,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{8565CE86-60D1-4545-A38F-C6DE111B05F1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".style", ".style", "{8B22A8AF-AECD-45A9-B9DA-79E71AF6354D}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Global
