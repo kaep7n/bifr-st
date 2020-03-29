@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace Bifröst
 {
-
     public sealed class Bus : IBus, IMetrics, IDisposable
     {
         private readonly TimeSpan cancellationTimeout = TimeSpan.FromMilliseconds(10);
